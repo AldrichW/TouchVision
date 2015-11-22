@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TouchVision</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="tap_now_title">Tap Now!</string>
+    <string name="action_settings">Settings</string>
+</resources>
