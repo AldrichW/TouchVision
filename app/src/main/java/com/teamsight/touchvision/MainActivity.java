@@ -38,9 +38,26 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
     @Override
-    protected void onTagRead(String tagMessage){
+    protected void onTagRead(final String tagMessage){
         // TODO Auto-generated method stub
-        TextView textView = (TextView) this.findViewById(R.id.tag_message_text);
-        textView.setText(tagMessage);
+        final TextView textView = (TextView) this.findViewById(R.id.tag_message_text);
+
+        new Thread(new Runnable() {
+            public void run() {
+                String message = tagMessage;
+                HTTPBackendService bs = new HTTPBackendService();
+                String postData = bs.createPOSTDataWithProductIdentifier(message);
+                final String postOutput = bs.sendPOSTRequest(null, postData);
+                textView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setText(postOutput);
+                    }
+                });
+            }
+        }).start();
+
+
+
     }
 }

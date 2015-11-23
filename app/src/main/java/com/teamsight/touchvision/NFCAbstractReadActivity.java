@@ -17,50 +17,50 @@ import android.widget.Toast;
  * Created by aldrichW on 15-11-20.
  */
 public abstract class NFCAbstractReadActivity extends Activity {
-    private NfcAdapter nfcAdapter;
-    private IntentFilter [] ndefExchangeFilter;
-    private PendingIntent pendingNfcIntent;
-    private Context context;
+    private NfcAdapter mNfcAdapter;
+    private IntentFilter [] mNdefExchangeFilter;
+    private PendingIntent mPendingNfcIntent;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         //Access the current application context
-        context = getApplicationContext();
+        mContext = getApplicationContext();
         //Let's just use the default NFC Adapter instance that android provides
-        nfcAdapter = NfcAdapter.getDefaultAdapter(context);
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(mContext);
         //Pending intent allows third party-apps to transition to our app when a specific event or notification occurs.
-        pendingNfcIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
+        mPendingNfcIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
         IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
-        ndefExchangeFilter = new IntentFilter[]{filter};
+        mNdefExchangeFilter = new IntentFilter[]{filter};
     }
 
     @Override
     protected void onResume(){
         super.onResume();
         //No NfcAdapter instance exists, NFC may not be supported.
-        if(nfcAdapter == null) {
-            Toast.makeText(context, "NFC is not supported", Toast.LENGTH_SHORT).show();
+        if(mNfcAdapter == null) {
+            Toast.makeText(mContext, "NFC is not supported", Toast.LENGTH_SHORT).show();
             return;
         }
 
         //The hardware device supports NFC, but is currently disabled in the system settings
-        if(!nfcAdapter.isEnabled()){
-            Toast.makeText(context, "Please enable your NFC", Toast.LENGTH_SHORT).show();
+        if(!mNfcAdapter.isEnabled()){
+            Toast.makeText(mContext, "Please enable your NFC", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
             startActivity(intent);
         }
 
         //Cool, we have an initialized NFC adapter and it's enabled. Onwards
-        nfcAdapter.enableForegroundDispatch(this, pendingNfcIntent, ndefExchangeFilter, null);
+        mNfcAdapter.enableForegroundDispatch(this, mPendingNfcIntent, mNdefExchangeFilter, null);
 
     }
 
     @Override
     protected void onPause(){
         //Make sure we disable foreground dispatch to avoid an exception being thrown
-        if(nfcAdapter != null){
-            nfcAdapter.disableForegroundDispatch(this);
+        if(mNfcAdapter != null){
+            mNfcAdapter.disableForegroundDispatch(this);
         }
         super.onPause();
 
