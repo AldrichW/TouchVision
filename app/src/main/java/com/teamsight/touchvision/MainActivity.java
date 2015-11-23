@@ -2,6 +2,7 @@ package com.teamsight.touchvision;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
