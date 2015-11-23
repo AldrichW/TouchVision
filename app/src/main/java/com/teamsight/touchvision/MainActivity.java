@@ -8,12 +8,29 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.util.Locale;
+
 public class MainActivity extends NFCAbstractReadActivity {
+    private TextToSpeechService mT2Service;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mT2Service = new TextToSpeechService(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                System.out.println("Text To Speech Service started!");
+                if(TextToSpeech.SUCCESS == status){
+                    if(mT2Service.setVoice(Locale.US)){
+                        System.out.println("Voice set successfully!");
+                    }
+                }
+            }
+        });
+        mT2Service.startService();
     }
 
     @Override
@@ -49,12 +66,22 @@ public class MainActivity extends NFCAbstractReadActivity {
                 HTTPBackendService bs = new HTTPBackendService();
                 String postData = bs.createPOSTDataWithProductIdentifier(message);
                 final String postOutput = bs.sendPOSTRequest(null, postData);
-                textView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        textView.setText(postOutput);
-                    }
-                });
+                try{
+                    JSONObject jsonOut= new JSONObject(postOutput);
+                    // Hard coding JSON key names. gross.
+                    // Going to make a dedicated JSONParserService. Stay tuned
+                    final String productName = jsonOut.getString("product_name");
+                    textView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.setText(productName);
+                            mT2Service.speakText(productName);
+                        }
+                    });
+                }
+                catch(Exception e){
+
+                }
             }
         }).start();
 

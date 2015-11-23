@@ -1,7 +1,11 @@
 package com.teamsight.touchvision;
 
 import android.content.Context;
+import android.media.AudioAttributes;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
+
+import java.util.Locale;
 
 /**
  * Created by aldrichW on 15-11-22.
@@ -14,13 +18,13 @@ public class TextToSpeechService {
     public TextToSpeechService(Context applicationContext, TextToSpeech.OnInitListener listener){
         mContext = applicationContext;
         mListener = listener;
-    }
-
-    public TextToSpeech startService(){
         if(mT2S == null){
             mT2S = new TextToSpeech(mContext, mListener);
         }
-        return mT2S;
+    }
+
+    public void startService(){
+
     }
 
     public Boolean stopService() {
@@ -29,6 +33,21 @@ public class TextToSpeechService {
             return true;
         }
         return false;
+    }
+
+    public Boolean setVoice(Locale locale){
+        Voice voice = new Voice("default", locale, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, null);
+        int result = mT2S.setVoice(voice);
+        if(TextToSpeech.LANG_MISSING_DATA == result ||
+                TextToSpeech.LANG_NOT_SUPPORTED == result){
+            return false;
+        }
+
+        return true;
+    }
+
+    public void speakText(final String text){
+        mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, null, "");
     }
 
 
