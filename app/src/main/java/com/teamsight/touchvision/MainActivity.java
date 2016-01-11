@@ -3,6 +3,7 @@ package com.teamsight.touchvision;
 import android.app.Activity;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import java.util.Locale;
 
 public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,10 +24,11 @@ public class MainActivity extends NFCAbstractReadActivity {
         mT2Service = new TextToSpeechService(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                System.out.println("Text To Speech Service started!");
+                Log.d(LOG_TAG, "Text To Speech Service started!");
                 if(TextToSpeech.SUCCESS == status){
                     if(mT2Service.setVoice(Locale.US)){
-                        System.out.println("Voice set successfully!");
+                        Log.d(LOG_TAG, "Voice set successfully!");
+                        Log.d(LOG_TAG, "Text To Speech service ready to take requests");
                     }
                 }
             }
@@ -60,14 +63,21 @@ public class MainActivity extends NFCAbstractReadActivity {
         // TODO Auto-generated method stub
         final TextView textView = (TextView) this.findViewById(R.id.tag_message_text);
 
+        final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
+
+        productIDView.setText(tagMessage);
+
         new Thread(new Runnable() {
             public void run() {
                 String message = tagMessage;
                 HTTPBackendService bs = new HTTPBackendService();
                 String postData = bs.createPOSTDataWithProductIdentifier(message);
+                Log.d(LOG_TAG, postData);
                 final String postOutput = bs.sendPOSTRequest(null, postData);
                 try{
                     JSONObject jsonOut= new JSONObject(postOutput);
+                    Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
+                    Log.d(LOG_TAG, jsonOut.toString());
                     // Hard coding JSON key names. gross.
                     // Going to make a dedicated JSONParserService. Stay tuned
                     final String productName = jsonOut.getString("product_name");
