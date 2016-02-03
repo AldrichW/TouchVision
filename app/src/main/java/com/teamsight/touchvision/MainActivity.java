@@ -26,6 +26,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String QUANTITY_KEY = "quantity";
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
+    private static final String CALORIE_KEY = "calories";
     private Button productButton;
     private Button nutritionButton;
 
@@ -35,6 +36,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     private String quantityUnit;
     private String priceString;
     private String quantityString;
+    private int calorieCount;
+    private String calorieString;
 
 
     @Override
@@ -132,17 +135,21 @@ public class MainActivity extends NFCAbstractReadActivity {
                     quantityString = String.valueOf(quantity) + " " + quantityUnit;
 
                     JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
+                    JSONObject nutritionCollection = nutritionOut.getJSONObject(NUTRITION_KEY);
 
+                    calorieCount = nutritionCollection.getInt(CALORIE_KEY);
+                    calorieString = calorieCount + " calories";
 
+                    sayProductInfo();
 
                     textView.post(new Runnable() {
                         @Override
                         public void run() {
                             //Using the T2Service, output product name, product name, and quantity
                             textView.setText(productName);
-                            sayProductInfo();
                         }
                     });
+
                 }
                 catch(Exception e){
 
@@ -158,6 +165,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
     protected void sayNutritionInfo(){
-
+        mT2Service.speakText(calorieString);
     }
 }

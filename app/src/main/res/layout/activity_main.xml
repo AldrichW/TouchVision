@@ -62,21 +62,22 @@
 
     <Button
         android:layout_width="300dp"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:text="product info"
         android:id="@+id/product_button"
-        android:layout_marginBottom="101dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_above="@+id/nutrition_button"
+        android:layout_alignStart="@+id/nutrition_button"
+        android:textSize="36dp"/>
 
     <Button
         android:layout_width="300dp"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:text="Nutrition Info"
         android:id="@+id/nutrition_button"
         android:layout_marginBottom="45dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:textSize="36dp"/>
 
 
 </RelativeLayout>
