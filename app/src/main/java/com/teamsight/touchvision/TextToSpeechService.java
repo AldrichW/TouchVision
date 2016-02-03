@@ -47,6 +47,10 @@ public class TextToSpeechService {
     }
 
     public void speakText(final String text){
+        while(mT2S.isSpeaking()) {
+            ;
+        }
+        mT2S.playSilentUtterance(1000, TextToSpeech.QUEUE_FLUSH, String.valueOf(0));
         mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, null, "");
     }
 

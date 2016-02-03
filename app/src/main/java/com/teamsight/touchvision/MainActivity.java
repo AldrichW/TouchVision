@@ -80,12 +80,23 @@ public class MainActivity extends NFCAbstractReadActivity {
                     Log.d(LOG_TAG, jsonOut.toString());
                     // Hard coding JSON key names. gross.
                     // Going to make a dedicated JSONParserService. Stay tuned
-                    final String productName = jsonOut.getString("product_name");
+                    JSONObject productOut = jsonOut.getJSONObject("product");
+                    final String productName = productOut.getString("name");
+                    final double price = productOut.getDouble("price");
+                    final String priceString = price + " dollars";
+                    final int quantity = productOut.getInt("quantity");
+                    final String quantityUnit = productOut.getString("type");
+                    final String quantityString = String.valueOf(quantity) + " " + quantityUnit;
+
+
+
                     textView.post(new Runnable() {
                         @Override
                         public void run() {
                             textView.setText(productName);
                             mT2Service.speakText(productName);
+                            mT2Service.speakText(priceString);
+                            mT2Service.speakText(quantityString);
                         }
                     });
                 }
