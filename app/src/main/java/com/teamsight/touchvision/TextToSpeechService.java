@@ -46,12 +46,12 @@ public class TextToSpeechService {
         return true;
     }
 
-    public void speakText(final String text){
+    public synchronized void speakText(final String text){
         while(mT2S.isSpeaking()) {
             ;
         }
-        mT2S.playSilentUtterance(1000, TextToSpeech.QUEUE_FLUSH, String.valueOf(0));
-        mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, null, "");
+        mT2S.playSilentUtterance(500, TextToSpeech.QUEUE_FLUSH, "");
+        mT2S.speak(text, TextToSpeech.QUEUE_ADD, null, "");
     }
 
 

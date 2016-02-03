@@ -6,6 +6,8 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,10 +19,49 @@ public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
+    //JSON Output key constants
+    private static final String PRODUCT_KEY = "product";
+    private static final String PRODUCT_NAME_KEY = "name";
+    private static final String PRICE_KEY = "price";
+    private static final String QUANTITY_KEY = "quantity";
+    private static final String TYPE_KEY = "type";
+    private static final String NUTRITION_KEY = "nutrition";
+    private Button productButton;
+    private Button nutritionButton;
+
+    private String productName;
+    private double price;
+    private int quantity;
+    private String quantityUnit;
+    private String priceString;
+    private String quantityString;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        productButton = (Button) this.findViewById(R.id.product_button);
+        nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
+
+        productButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //If there are product info queued from a previous tag read
+                //Voice out the product info again
+                sayProductInfo();
+            }
+        });
+
+        nutritionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //If there is nutritional info queued from a previous tag read
+                //Voice out the nutritional info.
+                sayNutritionInfo();
+            }
+        });
+
         mT2Service = new TextToSpeechService(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -65,6 +106,8 @@ public class MainActivity extends NFCAbstractReadActivity {
 
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
 
+
+
         productIDView.setText(tagMessage);
 
         new Thread(new Runnable() {
@@ -80,23 +123,24 @@ public class MainActivity extends NFCAbstractReadActivity {
                     Log.d(LOG_TAG, jsonOut.toString());
                     // Hard coding JSON key names. gross.
                     // Going to make a dedicated JSONParserService. Stay tuned
-                    JSONObject productOut = jsonOut.getJSONObject("product");
-                    final String productName = productOut.getString("name");
-                    final double price = productOut.getDouble("price");
-                    final String priceString = price + " dollars";
-                    final int quantity = productOut.getInt("quantity");
-                    final String quantityUnit = productOut.getString("type");
-                    final String quantityString = String.valueOf(quantity) + " " + quantityUnit;
+                    JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
+                    productName = productOut.getString(PRODUCT_NAME_KEY);
+                    price = productOut.getDouble(PRICE_KEY);
+                    priceString = price + " dollars";
+                    quantity = productOut.getInt(QUANTITY_KEY);
+                    quantityUnit = productOut.getString(TYPE_KEY);
+                    quantityString = String.valueOf(quantity) + " " + quantityUnit;
+
+                    JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
 
 
 
                     textView.post(new Runnable() {
                         @Override
                         public void run() {
+                            //Using the T2Service, output product name, product name, and quantity
                             textView.setText(productName);
-                            mT2Service.speakText(productName);
-                            mT2Service.speakText(priceString);
-                            mT2Service.speakText(quantityString);
+                            sayProductInfo();
                         }
                     });
                 }
@@ -105,8 +149,15 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         }).start();
+    }
 
+    protected void sayProductInfo(){
+        mT2Service.speakText(productName);
+        mT2Service.speakText(priceString);
+        mT2Service.speakText(quantityString);
+    }
 
+    protected void sayNutritionInfo(){
 
     }
 }

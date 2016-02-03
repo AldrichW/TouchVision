@@ -23,7 +23,7 @@ public class HTTPBackendService {
         JSONObject json = new JSONObject();
         try {
             json.put("upc", productIdentifier);     //Can't use an int here. Too large
-            //json.put("show_nutrition", "true");
+            json.put("show_nutrition", "true");
         }
         catch(JSONException e){
             System.err.println("[HTTPBackendService] Failed to create POST data using JSONObject");
