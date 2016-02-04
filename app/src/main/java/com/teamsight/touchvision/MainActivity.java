@@ -135,21 +135,17 @@ public class MainActivity extends NFCAbstractReadActivity {
                     quantityString = String.valueOf(quantity) + " " + quantityUnit;
 
                     JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-                    JSONObject nutritionCollection = nutritionOut.getJSONObject(NUTRITION_KEY);
 
-                    calorieCount = nutritionCollection.getInt(CALORIE_KEY);
-                    calorieString = calorieCount + " calories";
-
-                    sayProductInfo();
 
                     textView.post(new Runnable() {
                         @Override
                         public void run() {
                             //Using the T2Service, output product name, product name, and quantity
+
                             textView.setText(productName);
+                            sayProductInfo();
                         }
                     });
-
                 }
                 catch(Exception e){
 
