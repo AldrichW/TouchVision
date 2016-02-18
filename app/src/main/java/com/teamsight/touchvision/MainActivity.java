@@ -10,10 +10,27 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONObject;
-
 import java.util.Locale;
+
+import java.util.Set;
+
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+
+import com.teamsight.touchvision.sistelnetworks.activities.*;
+import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
+import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
+import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
+
 
 public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
@@ -27,6 +44,14 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
     private static final String CALORIE_KEY = "calories";
+
+    // Intent request codes
+    private static final int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_CONNECT = 2;
+    private static final int REQUEST_READ = 4;
+    private static final int REQUEST_WRITE = 5;
+
+
     private Button productButton;
     private Button nutritionButton;
 
@@ -38,6 +63,19 @@ public class MainActivity extends NFCAbstractReadActivity {
     private String quantityString;
     private int calorieCount;
     private String calorieString;
+    private static com.teamsight.touchvision.sistelnetworks.activities.MainActivity vWandMainActivity;
+
+
+    // Array of Bluetooth detected devices
+    public static BDevicesArray devices = new BDevicesArray();
+
+    // vWand object for connect and communicate to vWand
+    public static VWand vWand = null;
+
+
+    // Local Bluetooth Adapter
+    private	BluetoothAdapter mBluetoothAdapter = null;
+
 
 
     @Override
@@ -78,6 +116,20 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
         mT2Service.startService();
+
+        /*        vWandMainActivity = new com.teamsight.touchvision.sistelnetworks.activities.MainActivity();
+
+        vWandMainActivity.activateBluetooth();*/
+
+        vWand = VWand.getInstance();
+
+        activateBluetooth();
+
+        Toast tx;
+
+        tx = Toast.makeText(getApplicationContext(),
+                "Bluetooth active", Toast.LENGTH_LONG);
+        tx.show();
     }
 
     @Override
@@ -134,16 +186,23 @@ public class MainActivity extends NFCAbstractReadActivity {
                     quantityUnit = productOut.getString(TYPE_KEY);
                     quantityString = String.valueOf(quantity) + " " + quantityUnit;
 
-                    JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
 
+                    JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
+                    calorieString = nutritionOut.getString(NUTRITION_KEY); //At the moment the calorie info is being returned in the nutrition field
+
+                    calorieString = parseCalories(calorieString);
 
                     textView.post(new Runnable() {
                         @Override
                         public void run() {
-                            //Using the T2Service, output product name, product name, and quantity
 
+                            //First set the text on the screen, then use the T2S Service to read out all the info.
                             textView.setText(productName);
+                            textView.setText(calorieString);
+
+                            //Using the T2Service, output product name, product name, and quantity
                             sayProductInfo();
+                            sayNutritionInfo();
                         }
                     });
                 }
@@ -163,4 +222,65 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void sayNutritionInfo(){
         mT2Service.speakText(calorieString);
     }
+
+    protected String parseCalories (String calString) {
+        Integer calStartLoc = calorieString.indexOf(">") + 1;
+        Integer calEndLoc = calorieString.indexOf("}");
+        calString = calString.substring(calStartLoc, calEndLoc);
+
+        calString += " calories";
+
+        return calString;
+    }
+
+    /**
+     * This function refill the array of bonded devices. If Bluetooth is off then it is activated.*/
+
+    public void activateBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (mBluetoothAdapter != null) {
+            // Device does not support Bluetooth
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(
+                        BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+            else
+            // Bluetooth adapter was on!
+            {
+
+                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                // If there are paired devices
+                if (pairedDevices.size() > 0) {
+                    devices.clearDevices();
+                    // Loop through paired devices
+                    for (BluetoothDevice device : pairedDevices) {
+                        // Add the name and address to an array adapter to show in a
+                        // ListView
+                        devices.saveDevice(device);
+                        // mArrayAdapter.add(device.getName() + "\n" +
+                        // device.getAddress());
+
+                    }
+                    startConnectActivity();
+                }
+            }
+        }
+    }
+
+    /*
+     * This function starts Connect Activity*/
+
+    public void startConnectActivity() {
+        Intent i;
+        i = new Intent(this,  ConnectActivity.class);
+        startActivityForResult(i, REQUEST_CONNECT);
+    }
+
+
+
+
 }
+
+

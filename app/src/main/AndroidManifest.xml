@@ -3,6 +3,7 @@
     package="com.teamsight.touchvision" >
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,6 +21,15 @@
                 <action android:name="android.nfc.action.TAG_DISCOVERED"/>
             </intent-filter>
         </activity>
+
+        <activity android:name="com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name="com.teamsight.touchvision.sistelnetworks.activities.ReadActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name="com.teamsight.touchvision.sistelnetworks.activities.WriteActivity"
+            android:windowSoftInputMode="stateHidden"
+            android:screenOrientation="portrait"></activity>
+
     </application>
 
 </manifest>
