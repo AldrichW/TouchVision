@@ -1,6 +1,7 @@
 package com.teamsight.touchvision;
 
-import android.app.Activity;
+import android.content.Context;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -9,15 +10,18 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.capstone.knockknock.KnockDetector;
 
 import org.json.JSONObject;
 
 import java.util.Locale;
 
+
 public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private KnockDetector mKnockDetector = null;
 
     //JSON Output key constants
     private static final String PRODUCT_KEY = "product";
@@ -27,17 +31,19 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
     private static final String CALORIE_KEY = "calories";
+
     private Button productButton;
     private Button nutritionButton;
 
-    private String productName;
+    // Default values so we can test without a tag read
+    private String productName    = "no product name available";
     private double price;
     private int quantity;
     private String quantityUnit;
-    private String priceString;
-    private String quantityString;
+    private String priceString    = "no price available";
+    private String quantityString = "no quantity available";
     private int calorieCount;
-    private String calorieString;
+    private String calorieString  = "no calorie count available";
 
 
     @Override
@@ -77,7 +83,34 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         });
-        mT2Service.startService();
+
+        mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
+            @Override
+            protected void knockDetected(int knockCount) {
+                switch (knockCount){
+                    case 1:
+                        Log.d("knockDetected", "1 knocks");
+                        mT2Service.speakText(mOutputOneKnock, true);
+                        break;
+                    case 2:
+                        Log.d("knockDetected", "2 knocks");
+                        mT2Service.speakText(mOutputTwoKnock, true);
+                        break;
+                    case 3:
+                        Log.d("knockDetected", "3 knocks");
+                        mT2Service.speakText(mOutputThreeKnock, true);
+                        break;
+                    default:
+                        break;
+                }
+
+                mKnockDetector.pause();
+            }
+        };
+
+        // Initialize the knock detector but immediately pause it, as we will resume when needed.
+        mKnockDetector.init(null, null, null);
+        mKnockDetector.pause();
     }
 
     @Override
@@ -147,20 +180,24 @@ public class MainActivity extends NFCAbstractReadActivity {
                         }
                     });
                 }
-                catch(Exception e){
+                catch(Exception e) {
 
                 }
             }
         }).start();
     }
 
-    protected void sayProductInfo(){
-        mT2Service.speakText(productName);
-        mT2Service.speakText(priceString);
-        mT2Service.speakText(quantityString);
+    protected void sayProductInfo() {
+        mT2Service.speakText("Knock once for product name, twice for price and three times for quantity.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(productName, priceString, quantityString);
     }
 
-    protected void sayNutritionInfo(){
-        mT2Service.speakText(calorieString);
+    protected void sayNutritionInfo() {
+        mT2Service.speakText("Knock once for calorie info.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(calorieString, null, null);
     }
 }

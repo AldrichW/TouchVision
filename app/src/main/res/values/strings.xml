@@ -7,5 +7,5 @@
 
     <string name="nfc_tag">NFC Tag ID: </string>
     <string name="product_info">Product Info: </string>
-
+    <string name="nutrition_info">Nutrition Info: </string>
 </resources>
