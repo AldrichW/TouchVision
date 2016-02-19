@@ -1,6 +1,7 @@
 package com.teamsight.touchvision;
 
-import android.app.Activity;
+import android.content.Context;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -9,15 +10,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.capstone.knockknock.KnockDetector;
 
 import org.json.JSONObject;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
 
 import java.util.Locale;
+
 
 public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private KnockDetector mKnockDetector = null;
 
     //JSON Output key constants
     private static final String PRODUCT_KEY = "product";
@@ -27,17 +34,19 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
     private static final String CALORIE_KEY = "calories";
+
     private Button productButton;
     private Button nutritionButton;
 
-    private String productName;
+    // Default values so we can test without a tag read
+    private String productName    = "no product name available";
     private double price;
     private int quantity;
     private String quantityUnit;
-    private String priceString;
-    private String quantityString;
+    private String priceString    = "no price available";
+    private String quantityString = "no quantity available";
     private int calorieCount;
-    private String calorieString;
+    private String calorieString  = "no calorie count available";
 
 
     @Override
@@ -77,7 +86,34 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         });
-        mT2Service.startService();
+
+        mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
+            @Override
+            protected void knockDetected(int knockCount) {
+                switch (knockCount){
+                    case 1:
+                        Log.d("knockDetected", "1 knocks");
+                        mT2Service.speakText(mOutputOneKnock, true);
+                        break;
+                    case 2:
+                        Log.d("knockDetected", "2 knocks");
+                        mT2Service.speakText(mOutputTwoKnock, true);
+                        break;
+                    case 3:
+                        Log.d("knockDetected", "3 knocks");
+                        mT2Service.speakText(mOutputThreeKnock, true);
+                        break;
+                    default:
+                        break;
+                }
+
+                mKnockDetector.pause();
+            }
+        };
+
+        // Initialize the knock detector but immediately pause it, as we will resume when needed.
+        mKnockDetector.init(null, null, null);
+        mKnockDetector.pause();
     }
 
     @Override
@@ -104,63 +140,127 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     @Override
     protected void onTagRead(final String tagMessage){
-        // TODO Auto-generated method stub
-        final TextView textView = (TextView) this.findViewById(R.id.tag_message_text);
-
+        final TextView textView      = (TextView) this.findViewById(R.id.tag_message_text);
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
-
-
 
         productIDView.setText(tagMessage);
 
         new Thread(new Runnable() {
             public void run() {
-                String message = tagMessage;
-                HTTPBackendService bs = new HTTPBackendService();
-                String postData = bs.createPOSTDataWithProductIdentifier(message);
-                Log.d(LOG_TAG, postData);
-                final String postOutput = bs.sendPOSTRequest(null, postData);
-                try{
-                    JSONObject jsonOut= new JSONObject(postOutput);
-                    Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
-                    Log.d(LOG_TAG, jsonOut.toString());
-                    // Hard coding JSON key names. gross.
-                    // Going to make a dedicated JSONParserService. Stay tuned
-                    JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
-                    productName = productOut.getString(PRODUCT_NAME_KEY);
-                    price = productOut.getDouble(PRICE_KEY);
-                    priceString = price + " dollars";
-                    quantity = productOut.getInt(QUANTITY_KEY);
-                    quantityUnit = productOut.getString(TYPE_KEY);
-                    quantityString = String.valueOf(quantity) + " " + quantityUnit;
-
-                    JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-
-
-                    textView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            //Using the T2Service, output product name, product name, and quantity
-
-                            textView.setText(productName);
-                            sayProductInfo();
-                        }
-                    });
+                if(tagMessage.substring(0, 4).equals("ttc_")) {
+                    onTtcTagRead(tagMessage.substring(4));
                 }
-                catch(Exception e){
-
+                else {
+                    onProductTagRead(tagMessage, textView);
                 }
             }
         }).start();
     }
 
-    protected void sayProductInfo(){
-        mT2Service.speakText(productName);
-        mT2Service.speakText(priceString);
-        mT2Service.speakText(quantityString);
+
+    protected void sayProductInfo() {
+        mT2Service.speakText("Knock once for product name, twice for price and three times for quantity.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(productName, priceString, quantityString);
     }
 
-    protected void sayNutritionInfo(){
-        mT2Service.speakText(calorieString);
+
+    protected void sayNutritionInfo() {
+        mT2Service.speakText("Knock once for calorie info.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(calorieString, null, null);
+    }
+
+
+    protected void onProductTagRead(final String message, final TextView textView) {
+        HTTPBackendService bs = new HTTPBackendService();
+        String postData = bs.createPOSTDataWithProductIdentifier(message);
+        Log.d(LOG_TAG, postData);
+        final String postOutput = bs.sendPOSTRequest(null, postData);
+        try{
+            JSONObject jsonOut= new JSONObject(postOutput);
+            Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
+            Log.d(LOG_TAG, jsonOut.toString());
+            // Hard coding JSON key names. gross.
+            // Going to make a dedicated JSONParserService. Stay tuned
+            JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
+            productName = productOut.getString(PRODUCT_NAME_KEY);
+            price = productOut.getDouble(PRICE_KEY);
+            priceString = price + " dollars";
+            quantity = productOut.getInt(QUANTITY_KEY);
+            quantityUnit = productOut.getString(TYPE_KEY);
+            quantityString = String.valueOf(quantity) + " " + quantityUnit;
+
+            JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
+
+
+            textView.post(new Runnable() {
+                @Override
+                public void run() {
+                    //Using the T2Service, output product name, product name, and quantity
+
+                    textView.setText(productName);
+                    sayProductInfo();
+                }
+            });
+        }
+        catch(Exception e) {
+
+        }
+    }
+
+
+    // 1. For now, we run this in a new thread because we can't do IO on the main
+    //    thread. Once it is integrated, this would be called from the thread created
+    //    in onTagRead.
+    // 2. Some examples of (stopId, routeTag) are:
+    //    (0127, 511) - Bathurst at Dundas
+    //    (3079, 501) - Queen E at Yonge
+    //    (3088, 501) - Queen E at Spadina
+    //    (3081, 301) - Queen W at Bathurst, 24 hours
+    //    You can get streetcar numbers here https://www.ttc.ca/Routes/Streetcars.jsp
+    //    and get the stops for a streetcar here, replacing NUMBER
+    //    http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=NUMBER
+    // 3. The format expected for the NFC tag would be ttc_stopID_routeTag.  The prefix
+    //    is parsed in onTagRead and passed in here as stopId_routeTag.
+    //    Example: onTagRead("ttc_3081_301")
+
+    protected void onTtcTagRead(final String tagData) {
+        final int underscoreIndex = tagData.indexOf("_");
+
+        final String stopId   = tagData.substring(0, underscoreIndex);
+        final String routeTag = tagData.substring(underscoreIndex + 1);
+
+        HTTPBackendService bs = new HTTPBackendService();
+        Document document = bs.sendGETRequest(null, stopId, routeTag);
+
+        Element predsElement = (Element) document.getElementsByTagName("predictions").item(0);
+
+        final String stopTitle = predsElement.getAttribute("stopTitle");
+        Log.d("parseTtcData", stopTitle);
+        mT2Service.speakText("The stop is " + stopTitle, true);
+
+        NodeList directionList = predsElement.getElementsByTagName("direction");
+
+        for(int i=0; i < directionList.getLength(); i++)
+        {
+            Element direction = (Element) directionList.item(i);
+            final String routeDirection = direction.getAttribute("title");
+            Log.d("parseTtcData", routeDirection);
+
+            Element closestPred = (Element) direction.getElementsByTagName("prediction").item(0);
+            final String minutesUntilArrival = closestPred.getAttribute("minutes");
+            Log.d("parseTtcData", minutesUntilArrival);
+
+            int _secondsUntilArrival = Integer.parseInt(closestPred.getAttribute("seconds"));
+            _secondsUntilArrival %= 60; // Seconds per minute
+            final String secondsUntilArrival = Integer.toString(_secondsUntilArrival);
+            Log.d("parseTtcData", secondsUntilArrival);
+
+            final String timeString = minutesUntilArrival + " minutes " + secondsUntilArrival + " seconds";
+            mT2Service.speakText("The arrival time for " + routeDirection + " is " + timeString, true);
+        }
     }
 }

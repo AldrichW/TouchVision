@@ -1,6 +1,5 @@
 package com.teamsight.touchvision;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
