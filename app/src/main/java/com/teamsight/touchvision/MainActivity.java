@@ -33,7 +33,7 @@ import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
-    private TextToSpeechService mT2Service;
+    public static TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     //JSON Output key constants
@@ -124,6 +124,7 @@ public class MainActivity extends NFCAbstractReadActivity {
         vWand = VWand.getInstance();
 
         activateBluetooth();
+        showBluetoothDevices();
 
         Toast tx;
 
@@ -246,26 +247,25 @@ public class MainActivity extends NFCAbstractReadActivity {
                         BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
-            else
-            // Bluetooth adapter was on!
-            {
+        }
+    }
 
-                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-                // If there are paired devices
-                if (pairedDevices.size() > 0) {
-                    devices.clearDevices();
-                    // Loop through paired devices
-                    for (BluetoothDevice device : pairedDevices) {
-                        // Add the name and address to an array adapter to show in a
-                        // ListView
-                        devices.saveDevice(device);
-                        // mArrayAdapter.add(device.getName() + "\n" +
-                        // device.getAddress());
+    public void showBluetoothDevices() {
+        //Bluetooth is definitely enabled.
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        // If there are paired devices
+        if (pairedDevices.size() > 0) {
+            devices.clearDevices();
+            // Loop through paired devices
+            for (BluetoothDevice device : pairedDevices) {
+                // Add the name and address to an array adapter to show in a
+                // ListView
+                devices.saveDevice(device);
+                // mArrayAdapter.add(device.getName() + "\n" +
+                // device.getAddress());
 
-                    }
-                    startConnectActivity();
-                }
             }
+            startConnectActivity();
         }
     }
 
