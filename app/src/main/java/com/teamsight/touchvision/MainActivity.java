@@ -1,6 +1,7 @@
 package com.teamsight.touchvision;
 
 import android.app.Activity;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -75,6 +76,7 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     // Local Bluetooth Adapter
     private	BluetoothAdapter mBluetoothAdapter = null;
+    private NfcAdapter mNFCAdapter = null;
 
 
 
@@ -164,7 +166,9 @@ public class MainActivity extends NFCAbstractReadActivity {
 
 
         productIDView.setText(tagMessage);
-
+        //TODO: BT service to monitor BT state to make sure that the vWand is still connected and is able to run
+        //TODO: WIFI Monitoring in the HTTPBackendService.
+        //TODO: May want to move the thread instantiation into the actual HTTPBackendService, that way the thread management is dealt with there
         new Thread(new Runnable() {
             public void run() {
                 String message = tagMessage;
@@ -238,6 +242,13 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     public void activateBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        /*mNFCAdapter = NfcAdapter.getDefaultAdapter();
+
+        if(mNFCAdapter != null) {
+            if(!mNFCAdapter.isEnabled()){
+                Intent enableNFCIntent = new Intent(NfcAdapter.)
+            }
+        }*/
 
         if (mBluetoothAdapter != null) {
             // Device does not support Bluetooth
@@ -278,7 +289,50 @@ public class MainActivity extends NFCAbstractReadActivity {
         startActivityForResult(i, REQUEST_CONNECT);
     }
 
+    //This is a callback for the result of the activities that are called from here.
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
+        if (requestCode == REQUEST_ENABLE_BT & resultCode == RESULT_OK) {
+
+            mBluetoothAdapter = BluetoothAdapter
+                    .getDefaultAdapter();
+
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter
+                    .getBondedDevices();
+            // If there are paired devices
+            if (pairedDevices.size() > 0) {
+                devices.clearDevices();
+                // Loop through paired devices
+                for (BluetoothDevice device : pairedDevices) {
+                    // Add the name and address to an array adapter to show in a
+                    // ListView
+                    devices.saveDevice(device);
+                    // mArrayAdapter.add(device.getName() + "\n" +
+                    // device.getAddress());
+
+                }
+                startConnectActivity();
+            }
+
+        }
+        if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
+
+
+            try
+            {
+                //Sets View Layout properties
+                btnConnect.setText("Disconnect");
+                btnRead.setEnabled(true);
+                btnWrite.setEnabled(true);
+            }catch(Exception e)
+            {
+                Log.e(TAG, "Failed to start vWand");
+            }
+
+        }
+    }
 
 
 }
