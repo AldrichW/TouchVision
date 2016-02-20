@@ -106,14 +106,13 @@ public class ConnectActivity extends ListActivity {
 							tx.show();
 						}
 					});
-					
-			
 				}
 				finally
 				{
 					//Close connecting ... dialog
 					dialog.dismiss();
-					
+
+					MainActivity.mT2Service.speakText("V-Wand is Connected");
 					//Finish activity and return to main activity.
 					finish();
 				}

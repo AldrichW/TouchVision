@@ -35,6 +35,7 @@ import java.util.UUID;
 import com.teamsight.touchvision.sistelnetworks.vwand.Util;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWandException;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.nfc.NdefMessage;
@@ -90,6 +91,9 @@ public class VWand {
 	 */
 	public void createConnection(BluetoothDevice device) throws Exception
 	{
+			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
+			adapter.cancelDiscovery();
 			
 			mmSocket = device
 					.createRfcommSocketToServiceRecord(UUID
