@@ -120,7 +120,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         mT2Service.startService();
 
         /*        vWandMainActivity = new com.teamsight.touchvision.sistelnetworks.activities.MainActivity();
-
         vWandMainActivity.activateBluetooth();*/
 
         vWand = VWand.getInstance();
@@ -243,7 +242,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     public void activateBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         /*mNFCAdapter = NfcAdapter.getDefaultAdapter();
-
         if(mNFCAdapter != null) {
             if(!mNFCAdapter.isEnabled()){
                 Intent enableNFCIntent = new Intent(NfcAdapter.)
@@ -336,5 +334,3 @@ public class MainActivity extends NFCAbstractReadActivity {
 
 
 }
-
-
