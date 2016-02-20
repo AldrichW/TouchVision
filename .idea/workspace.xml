@@ -38,13 +38,21 @@
       <file leaf-file-name="MainActivity.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/MainActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.23372287">
-              <caret line="292" column="4" selection-start-line="292" selection-start-column="4" selection-end-line="292" selection-end-column="4" />
+            <state vertical-scroll-proportion="0.12456141">
+              <caret line="258" column="74" selection-start-line="258" selection-start-column="74" selection-end-line="258" selection-end-column="74" />
               <folding>
-                <element signature="e#5984#8214#0" expanded="true" />
-                <element signature="e#8213#8214#0" expanded="true" />
-                <element signature="e#8445#8446#0" expanded="true" />
-                <element signature="e#8496#8497#0" expanded="true" />
+                <element signature="e#2990#3267#0" expanded="true" />
+                <element signature="e#3266#3267#0" expanded="true" />
+                <element signature="e#3314#3595#0" expanded="true" />
+                <element signature="e#3594#3595#0" expanded="true" />
+                <element signature="e#3669#4166#0" expanded="true" />
+                <element signature="e#4165#4166#0" expanded="true" />
+                <element signature="e#6022#8252#0" expanded="true" />
+                <element signature="e#7581#8153#0" expanded="true" />
+                <element signature="e#8152#8153#0" expanded="true" />
+                <element signature="e#8251#8252#0" expanded="true" />
+                <element signature="e#8483#8484#0" expanded="true" />
+                <element signature="e#8534#8535#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -74,7 +82,7 @@
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/sistelnetworks/vwand/VWand.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="56" column="13" selection-start-line="56" selection-start-column="13" selection-end-line="56" selection-end-column="13" />
+              <caret line="60" column="13" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
               <folding />
             </state>
           </provider>
@@ -84,7 +92,7 @@
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/sistelnetworks/activities/ConnectActivity.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="52" column="13" selection-start-line="52" selection-start-column="13" selection-end-line="52" selection-end-column="13" />
+              <caret line="51" column="3" selection-start-line="51" selection-start-column="3" selection-end-line="51" selection-end-column="3" />
               <folding />
             </state>
           </provider>
@@ -1863,6 +1871,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="recentsLimit" value="5" />
+    <property name="FullScreen" value="false" />
   </component>
   <component name="RunManager" selected="Android Application.app">
     <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android Application">
@@ -2024,6 +2033,9 @@
     </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="fca2698f-385a-4ba0-8728-1bf313de3573" name="Default" comment="" />
@@ -2068,6 +2080,14 @@
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+      <collection />
+    </option>
+  </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
@@ -2087,7 +2107,7 @@
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/sistelnetworks/vwand/VWand.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="56" column="13" selection-start-line="56" selection-start-column="13" selection-end-line="56" selection-end-column="13" />
+          <caret line="60" column="13" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
           <folding />
         </state>
       </provider>
@@ -2095,7 +2115,7 @@
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/sistelnetworks/activities/ConnectActivity.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="52" column="13" selection-start-line="52" selection-start-column="13" selection-end-line="52" selection-end-column="13" />
+          <caret line="51" column="3" selection-start-line="51" selection-start-column="3" selection-end-line="51" selection-end-column="3" />
           <folding />
         </state>
       </provider>
@@ -2134,13 +2154,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/teamsight/touchvision/MainActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.23372287">
-          <caret line="292" column="4" selection-start-line="292" selection-start-column="4" selection-end-line="292" selection-end-column="4" />
+        <state vertical-scroll-proportion="0.12456141">
+          <caret line="258" column="74" selection-start-line="258" selection-start-column="74" selection-end-line="258" selection-end-column="74" />
           <folding>
-            <element signature="e#5984#8214#0" expanded="true" />
-            <element signature="e#8213#8214#0" expanded="true" />
-            <element signature="e#8445#8446#0" expanded="true" />
-            <element signature="e#8496#8497#0" expanded="true" />
+            <element signature="e#2990#3267#0" expanded="true" />
+            <element signature="e#3266#3267#0" expanded="true" />
+            <element signature="e#3314#3595#0" expanded="true" />
+            <element signature="e#3594#3595#0" expanded="true" />
+            <element signature="e#3669#4166#0" expanded="true" />
+            <element signature="e#4165#4166#0" expanded="true" />
+            <element signature="e#6022#8252#0" expanded="true" />
+            <element signature="e#7581#8153#0" expanded="true" />
+            <element signature="e#8152#8153#0" expanded="true" />
+            <element signature="e#8251#8252#0" expanded="true" />
+            <element signature="e#8483#8484#0" expanded="true" />
+            <element signature="e#8534#8535#0" expanded="true" />
           </folding>
         </state>
       </provider>
