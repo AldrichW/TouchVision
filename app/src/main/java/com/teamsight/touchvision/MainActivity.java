@@ -2,7 +2,6 @@ package com.teamsight.touchvision;
 
 import android.content.Context;
 import android.hardware.SensorManager;
-import android.app.Activity;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -12,16 +11,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.capstone.knockknock.KnockDetector;
@@ -30,12 +22,10 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
-import org.json.JSONObject;
 
 import java.util.Locale;
 import java.util.Set;
 
-import com.teamsight.touchvision.sistelnetworks.activities.*;
 import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
