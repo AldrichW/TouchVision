@@ -2,6 +2,8 @@ package com.teamsight.touchvision;
 
 import android.content.Context;
 import android.hardware.SensorManager;
+import android.app.Activity;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -10,6 +12,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.capstone.knockknock.KnockDetector;
 
@@ -17,8 +30,16 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
+import org.json.JSONObject;
 
 import java.util.Locale;
+import java.util.Set;
+
+import com.teamsight.touchvision.sistelnetworks.activities.*;
+import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
+import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
+import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
+
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -35,6 +56,12 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String NUTRITION_KEY = "nutrition";
     private static final String CALORIE_KEY = "calories";
 
+    // Intent request codes
+    private static final int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_CONNECT = 2;
+    private static final int REQUEST_READ = 4;
+    private static final int REQUEST_WRITE = 5;
+
     private Button productButton;
     private Button nutritionButton;
 
@@ -47,6 +74,20 @@ public class MainActivity extends NFCAbstractReadActivity {
     private String quantityString = "no quantity available";
     private int calorieCount;
     private String calorieString  = "no calorie count available";
+
+    private static com.teamsight.touchvision.sistelnetworks.activities.MainActivity vWandMainActivity;
+
+
+    // Array of Bluetooth detected devices
+    public static BDevicesArray devices = new BDevicesArray();
+
+    // vWand object for connect and communicate to vWand
+    public static VWand vWand = null;
+
+
+    // Local Bluetooth Adapter
+    private	BluetoothAdapter mBluetoothAdapter = null;
+    private NfcAdapter mNFCAdapter = null;
 
 
     @Override
@@ -114,6 +155,19 @@ public class MainActivity extends NFCAbstractReadActivity {
         // Initialize the knock detector but immediately pause it, as we will resume when needed.
         mKnockDetector.init(null, null, null);
         mKnockDetector.pause();
+
+        /*        vWandMainActivity = new com.teamsight.touchvision.sistelnetworks.activities.MainActivity();
+        vWandMainActivity.activateBluetooth();*/
+
+        vWand = VWand.getInstance();
+
+        activateBluetooth();
+
+        Toast tx;
+
+        tx = Toast.makeText(getApplicationContext(),
+                "Bluetooth active", Toast.LENGTH_LONG);
+        tx.show();
     }
 
     @Override
@@ -144,7 +198,9 @@ public class MainActivity extends NFCAbstractReadActivity {
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
 
         productIDView.setText(tagMessage);
-
+        //TODO: BT service to monitor BT state to make sure that the vWand is still connected and is able to run
+        //TODO: WIFI Monitoring in the HTTPBackendService.
+        //TODO: May want to move the thread instantiation into the actual HTTPBackendService, that way the thread management is dealt with there
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
@@ -193,16 +249,19 @@ public class MainActivity extends NFCAbstractReadActivity {
             quantityUnit = productOut.getString(TYPE_KEY);
             quantityString = String.valueOf(quantity) + " " + quantityUnit;
 
+            //At the moment the calorie info is being returned in the nutrition field
             JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-
+            calorieString = nutritionOut.getString(NUTRITION_KEY); 
+            calorieString = parseCalories(calorieString);
 
             textView.post(new Runnable() {
                 @Override
                 public void run() {
-                    //Using the T2Service, output product name, product name, and quantity
-
                     textView.setText(productName);
+                    textView.setText(calorieString);
+
                     sayProductInfo();
+                    sayNutritionInfo();
                 }
             });
         }
@@ -263,4 +322,112 @@ public class MainActivity extends NFCAbstractReadActivity {
             mT2Service.speakText("The arrival time for " + routeDirection + " is " + timeString, true);
         }
     }
+
+    protected String parseCalories (String calString) {
+        Integer calStartLoc = calorieString.indexOf(">") + 1;
+        Integer calEndLoc = calorieString.indexOf("}");
+        calString = calString.substring(calStartLoc, calEndLoc);
+
+        calString += " calories";
+
+        return calString;
+    }
+
+    /**
+     * This function refill the array of bonded devices. If Bluetooth is off then it is activated.*/
+
+    public void activateBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        /*mNFCAdapter = NfcAdapter.getDefaultAdapter();
+        if(mNFCAdapter != null) {
+            if(!mNFCAdapter.isEnabled()){
+                Intent enableNFCIntent = new Intent(NfcAdapter.)
+            }
+        }*/
+
+        if (mBluetoothAdapter != null) {
+            // Device does not support Bluetooth
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(
+                        BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+            else
+            // Bluetooth adapter was on!
+            {
+
+                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                // If there are paired devices
+                if (pairedDevices.size() > 0) {
+                    devices.clearDevices();
+                    // Loop through paired devices
+                    for (BluetoothDevice device : pairedDevices) {
+                        // Add the name and address to an array adapter to show in a
+                        // ListView
+                        devices.saveDevice(device);
+                        // mArrayAdapter.add(device.getName() + "\n" +
+                        // device.getAddress());
+
+                    }
+                    startConnectActivity();
+                }
+            }
+        }
+    }
+
+    /*
+     * This function starts Connect Activity*/
+
+    public void startConnectActivity() {
+        Intent i;
+        i = new Intent(this,  ConnectActivity.class);
+        startActivityForResult(i, REQUEST_CONNECT);
+    }
+
+    //This is a callback for the result of the activities that are called from here.
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == REQUEST_ENABLE_BT & resultCode == RESULT_OK) {
+
+            mBluetoothAdapter = BluetoothAdapter
+                    .getDefaultAdapter();
+
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter
+                    .getBondedDevices();
+            // If there are paired devices
+            if (pairedDevices.size() > 0) {
+                devices.clearDevices();
+                // Loop through paired devices
+                for (BluetoothDevice device : pairedDevices) {
+                    // Add the name and address to an array adapter to show in a
+                    // ListView
+                    devices.saveDevice(device);
+                    // mArrayAdapter.add(device.getName() + "\n" +
+                    // device.getAddress());
+
+                }
+                startConnectActivity();
+            }
+
+        }
+        if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
+
+
+            try
+            {
+                //Sets View Layout properties
+                btnConnect.setText("Disconnect");
+                btnRead.setEnabled(true);
+                btnWrite.setEnabled(true);
+            }catch(Exception e)
+            {
+                Log.e(TAG, "Failed to start vWand");
+            }
+
+        }
+    }
+
+
 }
