@@ -40,8 +40,10 @@ import android.widget.Toast;
 import com.teamsight.touchvision.MainActivity;
 //import com.teamsight.touchvision.sistelnetworks.activities.MainActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
+import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 import com.teamsight.touchvision.sistelnetworks.vwandtestingtool.R;
 
+import java.io.IOException;
 import java.util.Vector;
 
 /**
@@ -66,7 +68,15 @@ public class ConnectActivity extends ListActivity {
 		BDevicesArray devs = MainActivity.devices;
 		Vector<String> devVec = MainActivity.devices.getDevices();
 
+		Integer i = 0;
+		while (i < 4) {
+			MainActivity.mT2Service.speakText("Device " + (i+1) + " is   " + devs.getDevice(i).getName());
+			i++;
+		}
+
 		setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
+
+		MainActivity.mT2Service.speakText("Please Select your device from this list");
 
 	}
 
@@ -76,7 +86,8 @@ public class ConnectActivity extends ListActivity {
 		super.onListItemClick(listView, view, position, id);
 		
 		final int pos = position;
-		dialog = ProgressDialog.show(this, "", " Connecting ... to pos: " + pos, true, false);
+		dialog = ProgressDialog.show(this, "", "Connecting to: " + MainActivity.devices.getDevice(pos).getName() + " ...", true, false);
+		MainActivity.mT2Service.speakText("Connecting to: " + MainActivity.devices.getDevice(pos).getName());
 		
 		
 		new Thread( new Runnable(){    		
@@ -85,9 +96,13 @@ public class ConnectActivity extends ListActivity {
 				{
 
 					BluetoothDevice device = MainActivity.devices.getDevice(pos);
-					
+
+					MainActivity.vWand.disconnect();
+
 					//Create vWand connection
 					MainActivity.vWand.createConnection(device);
+
+					Boolean connected = MainActivity.vWand.isConnected();
 
 					
 					Intent i = new Intent();
@@ -95,7 +110,7 @@ public class ConnectActivity extends ListActivity {
 					
 			
 
-				}catch(Exception e)
+				}catch(IOException e)
 				{
 					mHandler.post(new Runnable() {
 						public void run() {
@@ -112,7 +127,11 @@ public class ConnectActivity extends ListActivity {
 					//Close connecting ... dialog
 					dialog.dismiss();
 
-					MainActivity.mT2Service.speakText("V-Wand is Connected");
+					if(MainActivity.vWand.isConnected()) {
+						MainActivity.mT2Service.speakText("V-Wand is Connected");
+					} else {
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+					}
 					//Finish activity and return to main activity.
 					finish();
 				}

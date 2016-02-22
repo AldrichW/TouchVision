@@ -68,11 +68,11 @@ public class ReadActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.read);
+/*		setContentView(R.layout.read);
 		
 		tvUID = (TextView) findViewById(R.id.txUID);
 		tvType = (TextView) findViewById(R.id.tvType);
-		tvContent = (TextView) findViewById(R.id.tvContent);
+		tvContent = (TextView) findViewById(R.id.tvContent);*/
 		read();
 		
 	}
@@ -94,10 +94,10 @@ public class ReadActivity extends Activity {
 					try
 					{
 						//Wake-up device
-						MainActivity.vWand.startvWand();
+						com.teamsight.touchvision.MainActivity.vWand.startvWand();
 
 
-						tag = MainActivity.vWand.startDetectCard();
+						tag = com.teamsight.touchvision.MainActivity.vWand.startDetectCard();
 
 						if (tag != null)
 						{
@@ -106,14 +106,17 @@ public class ReadActivity extends Activity {
 
 
 									//Set tag identifier in text view.
-									tvUID.setText(new String(Util.getHexValue(tag.get_uid())));
+									//tvUID.setText(new String(Util.getHexValue(tag.get_uid())));
+									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag is: " + tag.toString());
+									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag UID is: " + new String(Util.getHexValue(tag.get_uid())));
+									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag type is: " + tag.get_type());
 									//Set tag type in text view.
-									tvType.setText(tag.get_type());
+									//tvType.setText(tag.get_type());
 								}
 							});
 
 							//vWand read function
-							NdefMessage message = MainActivity.vWand.readType2Tag();
+							NdefMessage message = com.teamsight.touchvision.MainActivity.vWand.readType2Tag();
 
 							if (message != null)
 							{
@@ -148,7 +151,8 @@ public class ReadActivity extends Activity {
 									mHandler.post(new Runnable() {
 										public void run() {
 
-											tvContent.setText(content);
+											/*/tvContent.setText(content);*/
+											com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag message content is: " + content);
 											
 										}
 									});

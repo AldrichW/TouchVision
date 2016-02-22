@@ -34,7 +34,7 @@ import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
-    private TextToSpeechService mT2Service;
+    public static TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     //JSON Output key constants
@@ -287,6 +287,14 @@ public class MainActivity extends NFCAbstractReadActivity {
         startActivityForResult(i, REQUEST_CONNECT);
     }
 
+    /**
+     * This function starts Read Activity.
+     */
+    public void startReadActivity() {
+        Intent i = new Intent(this, ReadActivity.class);
+        startActivityForResult(i, REQUEST_READ);
+    }
+
     //This is a callback for the result of the activities that are called from here.
     
     @Override
@@ -320,13 +328,11 @@ public class MainActivity extends NFCAbstractReadActivity {
 
             try
             {
-                //Sets View Layout properties
-                btnConnect.setText("Disconnect");
-                btnRead.setEnabled(true);
-                btnWrite.setEnabled(true);
+                Toast.makeText(getApplicationContext(), "Successfully Connected to the vWand.", Toast.LENGTH_LONG).show(); //Sets View Layout properties
+                startReadActivity();
             }catch(Exception e)
             {
-                Log.e(TAG, "Failed to start vWand");
+
             }
 
         }
