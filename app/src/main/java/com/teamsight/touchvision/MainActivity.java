@@ -73,6 +73,11 @@ public class MainActivity extends NFCAbstractReadActivity {
     // vWand object for connect and communicate to vWand
     public static VWand vWand = null;
 
+    //Tag contents from vWand reads
+    public static String tagContent = null;
+    public static String previousTagContent = null;
+
+
 
     // Local Bluetooth Adapter
     private	BluetoothAdapter mBluetoothAdapter = null;
@@ -118,9 +123,6 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
         mT2Service.startService();
-
-        /*        vWandMainActivity = new com.teamsight.touchvision.sistelnetworks.activities.MainActivity();
-        vWandMainActivity.activateBluetooth();*/
 
         vWand = VWand.getInstance();
 
@@ -305,8 +307,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             mBluetoothAdapter = BluetoothAdapter
                     .getDefaultAdapter();
 
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter
-                    .getBondedDevices();
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
             // If there are paired devices
             if (pairedDevices.size() > 0) {
                 devices.clearDevices();
@@ -315,15 +316,13 @@ public class MainActivity extends NFCAbstractReadActivity {
                     // Add the name and address to an array adapter to show in a
                     // ListView
                     devices.saveDevice(device);
-                    // mArrayAdapter.add(device.getName() + "\n" +
-                    // device.getAddress());
+
 
                 }
                 startConnectActivity();
             }
 
-        }
-        if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
+        } else if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
 
 
             try
@@ -335,6 +334,8 @@ public class MainActivity extends NFCAbstractReadActivity {
 
             }
 
+        } else if (requestCode == REQUEST_READ) {
+            onTagRead(tagContent);
         }
     }
 

@@ -17,19 +17,22 @@ public class HTTPBackendService {
     private static final String DEFAULT_URL = "https://still-sierra-6295.herokuapp.com/product";
 
     public String createPOSTDataWithProductIdentifier(String productIdentifier){
-        if(productIdentifier.isEmpty()){
-            return "";  //just return an empty string back.
+        if(productIdentifier != null) {
+            if (productIdentifier.isEmpty()) {
+                return "";  //just return an empty string back.
+            }
+            JSONObject json = new JSONObject();
+            try {
+                json.put("upc", productIdentifier);     //Can't use an int here. Too large
+                json.put("show_nutrition", "true");
+            } catch (JSONException e) {
+                System.err.println("[HTTPBackendService] Failed to create POST data using JSONObject");
+                e.printStackTrace();
+            }
+            return json.toString();
+        } else {
+            return "";
         }
-        JSONObject json = new JSONObject();
-        try {
-            json.put("upc", productIdentifier);     //Can't use an int here. Too large
-            json.put("show_nutrition", "true");
-        }
-        catch(JSONException e){
-            System.err.println("[HTTPBackendService] Failed to create POST data using JSONObject");
-            e.printStackTrace();
-        }
-        return json.toString();
     }
 
     public String sendPOSTRequest(URL url, String jsonData){

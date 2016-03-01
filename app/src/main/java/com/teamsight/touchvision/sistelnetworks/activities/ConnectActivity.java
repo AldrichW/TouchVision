@@ -69,14 +69,27 @@ public class ConnectActivity extends ListActivity {
 		Vector<String> devVec = MainActivity.devices.getDevices();
 
 		Integer i = 0;
-		while (i < 4) {
+		Integer size = devs.getSize();
+
+		/*while (i < size) {
 			MainActivity.mT2Service.speakText("Device " + (i+1) + " is   " + devs.getDevice(i).getName());
 			i++;
+		}*/
+
+		for (final Integer pos : devs.getvWands()) {
+
+			dialog = ProgressDialog.show(this, "", "Connecting to: " + devs.getDevice(pos).getName() + " ...", true, false);
+			MainActivity.mT2Service.speakText("Connecting to: " + devs.getDevice(pos).getName());
+
+			attemptConnection(pos);
+
+			//Close connecting ... dialog
+			dialog.dismiss();
 		}
 
-		setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
 
-		MainActivity.mT2Service.speakText("Please Select your device from this list");
+		//setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
+		//MainActivity.mT2Service.speakText("Please Select your device from this list");
 
 	}
 
@@ -140,4 +153,53 @@ public class ConnectActivity extends ListActivity {
 			
 	}
 
+
+	protected void attemptConnection(final Integer position) {
+		new Thread( new Runnable(){
+			public void run(){
+				try
+				{
+
+					BluetoothDevice device = MainActivity.devices.getDevice(position);
+
+					MainActivity.vWand.disconnect();
+
+					//Create vWand connection
+					MainActivity.vWand.createConnection(device);
+
+					Boolean connected = MainActivity.vWand.isConnected();
+
+
+					Intent i = new Intent();
+					setResult(RESULT_OK, i);
+
+
+
+				}catch(IOException e)
+				{
+					mHandler.post(new Runnable() {
+						public void run() {
+							Toast tx;
+
+							tx = Toast.makeText(getApplicationContext(),
+									"Unable to connect", Toast.LENGTH_LONG);
+							tx.show();
+						}
+					});
+				}
+				finally
+				{
+					if(MainActivity.vWand.isConnected()) {
+						MainActivity.mT2Service.speakText("V-Wand is Connected");
+					} else {
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+					}
+					//Finish activity and return to main activity.
+					finish();
+				}
+			}
+		}).start();
+	}
 }
+
+

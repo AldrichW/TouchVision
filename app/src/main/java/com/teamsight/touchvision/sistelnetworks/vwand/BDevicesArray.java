@@ -34,12 +34,20 @@ public class BDevicesArray {
 	
 	private Vector<String> stringDevices = new Vector<String>();
 	private Vector<BluetoothDevice> devices = new Vector<BluetoothDevice>();
+	private Vector<String> deviceNames = new Vector<String>();
+	private Vector<Integer> vWands = new Vector<Integer>();
 	
 	
 	public void saveDevice(BluetoothDevice device)
 	{
 		devices.add(device);
 		stringDevices.add(device.getName() + "\n" + device.getAddress());
+
+		//Check if the device name includes vwand (this is how we're detecting vWands).
+		if(device.getName().toLowerCase().contains("vwand")) {
+			//if it contains vWand, then assume it's a vWand, add an entry into the list of vWands.
+			vWands.add(devices.size() - 1);
+		}
 	}
 	
 	public BluetoothDevice getDevice(int location)
@@ -54,6 +62,14 @@ public class BDevicesArray {
 	public void clearDevices()
 	{
 		stringDevices.clear();
+	}
+
+	public Integer getSize() {
+		return devices.size();
+	}
+
+	public Vector<Integer> getvWands() {
+		return vWands;
 	}
 
 }
