@@ -3,6 +3,7 @@ package com.teamsight.touchvision;
 import android.app.Activity;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
@@ -36,6 +37,8 @@ import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 public class MainActivity extends NFCAbstractReadActivity {
     public static TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    public static Vibrator vibe;
+
 
     //JSON Output key constants
     private static final String PRODUCT_KEY = "product";
@@ -124,15 +127,26 @@ public class MainActivity extends NFCAbstractReadActivity {
         });
         mT2Service.startService();
 
+       vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
+    }
+
+    protected void onStart() {
+        super.onStart();
+
+
         vWand = VWand.getInstance();
 
-        activateBluetooth();
+        if(!vWand.isConnected()){
 
-        Toast tx;
+            Toast tx;
 
-        tx = Toast.makeText(getApplicationContext(),
-                "Bluetooth active", Toast.LENGTH_LONG);
-        tx.show();
+            tx = Toast.makeText(getApplicationContext(),
+                    "Bluetooth active", Toast.LENGTH_LONG);
+            tx.show();
+
+            activateBluetooth();
+        }
+
     }
 
     @Override
@@ -243,12 +257,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     public void activateBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        /*mNFCAdapter = NfcAdapter.getDefaultAdapter();
-        if(mNFCAdapter != null) {
-            if(!mNFCAdapter.isEnabled()){
-                Intent enableNFCIntent = new Intent(NfcAdapter.)
-            }
-        }*/
 
         if (mBluetoothAdapter != null) {
             // Device does not support Bluetooth

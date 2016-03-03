@@ -32,6 +32,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -56,7 +57,9 @@ public class ConnectActivity extends ListActivity {
 
 	private ProgressDialog dialog;
 	private Handler mHandler = new Handler();
-	
+	private Boolean connected = false;
+	private final int durationMs = 500;
+
 	// Debugging
 	private static final String TAG = "ConnectActivity";
 
@@ -67,30 +70,37 @@ public class ConnectActivity extends ListActivity {
 
 		BDevicesArray devs = MainActivity.devices;
 		Vector<String> devVec = MainActivity.devices.getDevices();
+		Boolean testedAll = false;
 
 		Integer i = 0;
 		Integer size = devs.getSize();
 
-		/*while (i < size) {
-			MainActivity.mT2Service.speakText("Device " + (i+1) + " is   " + devs.getDevice(i).getName());
-			i++;
-		}*/
-
 		for (final Integer pos : devs.getvWands()) {
 
 			dialog = ProgressDialog.show(this, "", "Connecting to: " + devs.getDevice(pos).getName() + " ...", true, false);
-			MainActivity.mT2Service.speakText("Connecting to: " + devs.getDevice(pos).getName());
+			MainActivity.mT2Service.speakText("Connecting to: V-Wand" + devs.getDevice(pos).getName().substring(5));
 
 			attemptConnection(pos);
+
+			connected = MainActivity.vWand.isConnected();
+
+			if(connected) {
+				break;
+			}
 
 			//Close connecting ... dialog
 			dialog.dismiss();
 		}
 
+	}
 
-		//setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
-		//MainActivity.mT2Service.speakText("Please Select your device from this list");
+	protected void onStart() {
+		super.onStart();
 
+		/*if(!connected) {
+			setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
+			MainActivity.mT2Service.speakText("Please Select your device from this list");
+		}*/
 	}
 
 	@Override
@@ -190,6 +200,7 @@ public class ConnectActivity extends ListActivity {
 				finally
 				{
 					if(MainActivity.vWand.isConnected()) {
+						MainActivity.vibe.vibrate(3000);
 						MainActivity.mT2Service.speakText("V-Wand is Connected");
 					} else {
 						MainActivity.mT2Service.speakText("Failed to connect to V-wand");

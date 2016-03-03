@@ -38,6 +38,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.teamsight.touchvision.*;
+import com.teamsight.touchvision.MainActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.Tag;
 import com.teamsight.touchvision.sistelnetworks.vwand.Util;
@@ -54,6 +56,7 @@ public class ReadActivity extends Activity {
 	
 	// Debugging
 	private static final String TAG = "ReadActivity";
+
 	
 	private Tag tag = null;
 	private TextView tvUID = null;
@@ -96,18 +99,6 @@ public class ReadActivity extends Activity {
 
 						if (tag != null)
 						{
-							/*mHandler.post(new Runnable() {
-								public void run() {
-
-									*//*This stuff can all be removed probably.
-									//Set tag identifier in text view.
-									//tvUID.setText(new String(Util.getHexValue(tag.get_uid())));
-									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag is: " + tag.toString());
-									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag UID is: " + new String(Util.getHexValue(tag.get_uid())));
-									com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag type is: " + tag.get_type());*//*
-
-								}
-							});*/
 
 							//vWand read function
 							NdefMessage message = com.teamsight.touchvision.MainActivity.vWand.readType2Tag();
@@ -141,7 +132,8 @@ public class ReadActivity extends Activity {
 										
 									}
 									content = new String(payload, Charset.forName("US-ASCII"));
-									com.teamsight.touchvision.MainActivity.tagContent = content;
+									content = content.substring(3);
+									MainActivity.tagContent = content;//This is a shitty h4xx0r way of doing it, need to build a smarter parser here
 									
 									mHandler.post(new Runnable() {
 										public void run() {
@@ -149,13 +141,11 @@ public class ReadActivity extends Activity {
 											/*tvContent.setText(content);*/
 											//This is to make sure that if we're re-reading the same tag we don't keep repeating the content.
 											if (!content.equals(com.teamsight.touchvision.MainActivity.previousTagContent)) {
-
-												//Only read out stuff if the tag is different, and save the different value read.
-												com.teamsight.touchvision.MainActivity.mT2Service.speakText("Tag message content is: " + content);
-												com.teamsight.touchvision.MainActivity.previousTagContent = content;
+												//This was for debug!
+												// MainActivity.mT2Service.speakText("Tag message content is: " + content);
+												MainActivity.previousTagContent = content;
 											} else {
-												//onDestroy();
-												com.teamsight.touchvision.MainActivity.mT2Service.speakText("Should stop reading now");
+												//com.teamsight.touchvision.MainActivity.mT2Service.speakText("Should stop reading now");
 												reading = false;
 											}
 
@@ -173,7 +163,11 @@ public class ReadActivity extends Activity {
 						Log.e(TAG, "Failed to read tag");	
 					}
 				}while(reading);
-				
+
+				//TODO: figure out haptic feedback here so we can vibrate as soon as we are done reading.
+				MainActivity.vibe.vibrate(500);
+				//kill this thread so we can return to the main thread.
+				finish();
 			}
 		}).start();
 	}
