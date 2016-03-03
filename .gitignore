@@ -1,3 +1,9 @@
-.idea/workspace.xml
-local.properties
 app/app.iml
+/build
+/.idea
+*.iml
+/local.properties
+.DS_Store
+.gradle
+import-summary.txt
+local.properties
