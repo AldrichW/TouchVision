@@ -1,4 +1,5 @@
 <resources>
+    <string name="copyright">Copyright 2016 Insight</string>
     <string name="app_name">TouchVision</string>
 
     <string name="hello_world">Hello world!</string>
@@ -7,5 +8,6 @@
 
     <string name="nfc_tag">NFC Tag ID: </string>
     <string name="product_info">Product Info: </string>
+    <string name="title_activity_initial">InitialActivity</string>
 
 </resources>

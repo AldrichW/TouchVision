@@ -130,6 +130,7 @@ public class MainActivity extends NFCAbstractReadActivity {
        vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
     }
 
+    @Override
     protected void onStart() {
         super.onStart();
 
