@@ -38,6 +38,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.teamsight.touchvision.*;
+import com.teamsight.touchvision.MainActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.Tag;
 import com.teamsight.touchvision.sistelnetworks.vwand.Util;
@@ -54,6 +56,7 @@ public class ReadActivity extends Activity {
 	
 	// Debugging
 	private static final String TAG = "ReadActivity";
+
 	
 	private Tag tag = null;
 	private TextView tvUID = null;
@@ -68,11 +71,6 @@ public class ReadActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.read);
-		
-		tvUID = (TextView) findViewById(R.id.txUID);
-		tvType = (TextView) findViewById(R.id.tvType);
-		tvContent = (TextView) findViewById(R.id.tvContent);
 		read();
 		
 	}
@@ -94,26 +92,16 @@ public class ReadActivity extends Activity {
 					try
 					{
 						//Wake-up device
-						MainActivity.vWand.startvWand();
+						com.teamsight.touchvision.MainActivity.vWand.startvWand();
 
 
-						tag = MainActivity.vWand.startDetectCard();
+						tag = com.teamsight.touchvision.MainActivity.vWand.startDetectCard();
 
 						if (tag != null)
 						{
-							mHandler.post(new Runnable() {
-								public void run() {
-
-
-									//Set tag identifier in text view.
-									tvUID.setText(new String(Util.getHexValue(tag.get_uid())));
-									//Set tag type in text view.
-									tvType.setText(tag.get_type());
-								}
-							});
 
 							//vWand read function
-							NdefMessage message = MainActivity.vWand.readType2Tag();
+							NdefMessage message = com.teamsight.touchvision.MainActivity.vWand.readType2Tag();
 
 							if (message != null)
 							{
@@ -135,7 +123,7 @@ public class ReadActivity extends Activity {
 										try
 										{
 											Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-											startActivity(intent);
+											/*startActivity(intent);*/
 										}catch(Exception ex)
 										{
 
@@ -144,11 +132,23 @@ public class ReadActivity extends Activity {
 										
 									}
 									content = new String(payload, Charset.forName("US-ASCII"));
+									content = content.substring(3);
+									MainActivity.tagContent = content;//This is a shitty h4xx0r way of doing it, need to build a smarter parser here
 									
 									mHandler.post(new Runnable() {
 										public void run() {
 
-											tvContent.setText(content);
+											/*tvContent.setText(content);*/
+											//This is to make sure that if we're re-reading the same tag we don't keep repeating the content.
+											if (!content.equals(com.teamsight.touchvision.MainActivity.previousTagContent)) {
+												//This was for debug!
+												// MainActivity.mT2Service.speakText("Tag message content is: " + content);
+												MainActivity.previousTagContent = content;
+											} else {
+												//com.teamsight.touchvision.MainActivity.mT2Service.speakText("Should stop reading now");
+												reading = false;
+											}
+
 											
 										}
 									});
@@ -163,10 +163,15 @@ public class ReadActivity extends Activity {
 						Log.e(TAG, "Failed to read tag");	
 					}
 				}while(reading);
-				
+
+				//TODO: figure out haptic feedback here so we can vibrate as soon as we are done reading.
+				MainActivity.vibe.vibrate(500);
+				//kill this thread so we can return to the main thread.
+				finish();
 			}
 		}).start();
 	}
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -175,7 +180,7 @@ public class ReadActivity extends Activity {
 			reading = false;
 			
 			//On destroy stop detecting card
-			MainActivity.vWand.stopDetectCard();
+			com.teamsight.touchvision.MainActivity.vWand.stopDetectCard();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

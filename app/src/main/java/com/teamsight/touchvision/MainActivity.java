@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.SensorManager;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
@@ -33,9 +34,11 @@ import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
-    private TextToSpeechService mT2Service;
+    public static TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private KnockDetector mKnockDetector = null;
+    public static Vibrator vibe;
+
 
     //JSON Output key constants
     private static final String PRODUCT_KEY = "product";
@@ -73,6 +76,11 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     // vWand object for connect and communicate to vWand
     public static VWand vWand = null;
+
+    //Tag contents from vWand reads
+    public static String tagContent = null;
+    public static String previousTagContent = null;
+
 
 
     // Local Bluetooth Adapter
@@ -147,18 +155,26 @@ public class MainActivity extends NFCAbstractReadActivity {
         mKnockDetector.init(null, null, null);
         mKnockDetector.pause();
 
-        /*        vWandMainActivity = new com.teamsight.touchvision.sistelnetworks.activities.MainActivity();
-        vWandMainActivity.activateBluetooth();*/
+       vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
+    }
+
+    protected void onStart() {
+        super.onStart();
+
 
         vWand = VWand.getInstance();
 
-        activateBluetooth();
+        if(!vWand.isConnected()){
 
-        Toast tx;
+            Toast tx;
 
-        tx = Toast.makeText(getApplicationContext(),
-                "Bluetooth active", Toast.LENGTH_LONG);
-        tx.show();
+            tx = Toast.makeText(getApplicationContext(),
+                    "Bluetooth active", Toast.LENGTH_LONG);
+            tx.show();
+
+            activateBluetooth();
+        }
+
     }
 
     @Override
@@ -326,12 +342,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     public void activateBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        /*mNFCAdapter = NfcAdapter.getDefaultAdapter();
-        if(mNFCAdapter != null) {
-            if(!mNFCAdapter.isEnabled()){
-                Intent enableNFCIntent = new Intent(NfcAdapter.)
-            }
-        }*/
 
         if (mBluetoothAdapter != null) {
             // Device does not support Bluetooth
@@ -372,6 +382,14 @@ public class MainActivity extends NFCAbstractReadActivity {
         startActivityForResult(i, REQUEST_CONNECT);
     }
 
+    /**
+     * This function starts Read Activity.
+     */
+    public void startReadActivity() {
+        Intent i = new Intent(this, ReadActivity.class);
+        startActivityForResult(i, REQUEST_READ);
+    }
+
     //This is a callback for the result of the activities that are called from here.
     
     @Override
@@ -382,8 +400,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             mBluetoothAdapter = BluetoothAdapter
                     .getDefaultAdapter();
 
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter
-                    .getBondedDevices();
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
             // If there are paired devices
             if (pairedDevices.size() > 0) {
                 devices.clearDevices();
@@ -392,28 +409,26 @@ public class MainActivity extends NFCAbstractReadActivity {
                     // Add the name and address to an array adapter to show in a
                     // ListView
                     devices.saveDevice(device);
-                    // mArrayAdapter.add(device.getName() + "\n" +
-                    // device.getAddress());
+
 
                 }
                 startConnectActivity();
             }
 
-        }
-        if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
+        } else if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
 
 
             try
             {
-                //Sets View Layout properties
-                btnConnect.setText("Disconnect");
-                btnRead.setEnabled(true);
-                btnWrite.setEnabled(true);
+                Toast.makeText(getApplicationContext(), "Successfully Connected to the vWand.", Toast.LENGTH_LONG).show(); //Sets View Layout properties
+                startReadActivity();
             }catch(Exception e)
             {
-                Log.e(TAG, "Failed to start vWand");
+
             }
 
+        } else if (requestCode == REQUEST_READ) {
+            onTagRead(tagContent);
         }
     }
 

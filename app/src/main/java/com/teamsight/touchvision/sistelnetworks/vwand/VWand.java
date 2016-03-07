@@ -89,7 +89,7 @@ public class VWand {
 	 * @param device vWand already paired to the local adapter.
 	 * @throws Exception if any error occurred.
 	 */
-	public void createConnection(BluetoothDevice device) throws Exception
+	public void createConnection(BluetoothDevice device) throws IOException
 	{
 			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 

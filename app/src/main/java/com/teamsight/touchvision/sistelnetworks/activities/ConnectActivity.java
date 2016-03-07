@@ -32,6 +32,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -40,8 +41,10 @@ import android.widget.Toast;
 import com.teamsight.touchvision.MainActivity;
 //import com.teamsight.touchvision.sistelnetworks.activities.MainActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
+import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 import com.teamsight.touchvision.sistelnetworks.vwandtestingtool.R;
 
+import java.io.IOException;
 import java.util.Vector;
 
 /**
@@ -54,7 +57,9 @@ public class ConnectActivity extends ListActivity {
 
 	private ProgressDialog dialog;
 	private Handler mHandler = new Handler();
-	
+	private Boolean connected = false;
+	private final int durationMs = 500;
+
 	// Debugging
 	private static final String TAG = "ConnectActivity";
 
@@ -65,9 +70,37 @@ public class ConnectActivity extends ListActivity {
 
 		BDevicesArray devs = MainActivity.devices;
 		Vector<String> devVec = MainActivity.devices.getDevices();
+		Boolean testedAll = false;
 
-		setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
+		Integer i = 0;
+		Integer size = devs.getSize();
 
+		for (final Integer pos : devs.getvWands()) {
+
+			dialog = ProgressDialog.show(this, "", "Connecting to: " + devs.getDevice(pos).getName() + " ...", true, false);
+			MainActivity.mT2Service.speakText("Connecting to: V-Wand" + devs.getDevice(pos).getName().substring(5));
+
+			attemptConnection(pos);
+
+			connected = MainActivity.vWand.isConnected();
+
+			if(connected) {
+				break;
+			}
+
+			//Close connecting ... dialog
+			dialog.dismiss();
+		}
+
+	}
+
+	protected void onStart() {
+		super.onStart();
+
+		/*if(!connected) {
+			setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, MainActivity.devices.getDevices()));
+			MainActivity.mT2Service.speakText("Please Select your device from this list");
+		}*/
 	}
 
 	@Override
@@ -76,7 +109,8 @@ public class ConnectActivity extends ListActivity {
 		super.onListItemClick(listView, view, position, id);
 		
 		final int pos = position;
-		dialog = ProgressDialog.show(this, "", " Connecting ... to pos: " + pos, true, false);
+		dialog = ProgressDialog.show(this, "", "Connecting to: " + MainActivity.devices.getDevice(pos).getName() + " ...", true, false);
+		MainActivity.mT2Service.speakText("Connecting to: " + MainActivity.devices.getDevice(pos).getName());
 		
 		
 		new Thread( new Runnable(){    		
@@ -85,9 +119,13 @@ public class ConnectActivity extends ListActivity {
 				{
 
 					BluetoothDevice device = MainActivity.devices.getDevice(pos);
-					
+
+					MainActivity.vWand.disconnect();
+
 					//Create vWand connection
 					MainActivity.vWand.createConnection(device);
+
+					Boolean connected = MainActivity.vWand.isConnected();
 
 					
 					Intent i = new Intent();
@@ -95,7 +133,7 @@ public class ConnectActivity extends ListActivity {
 					
 			
 
-				}catch(Exception e)
+				}catch(IOException e)
 				{
 					mHandler.post(new Runnable() {
 						public void run() {
@@ -112,7 +150,11 @@ public class ConnectActivity extends ListActivity {
 					//Close connecting ... dialog
 					dialog.dismiss();
 
-					MainActivity.mT2Service.speakText("V-Wand is Connected");
+					if(MainActivity.vWand.isConnected()) {
+						MainActivity.mT2Service.speakText("V-Wand is Connected");
+					} else {
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+					}
 					//Finish activity and return to main activity.
 					finish();
 				}
@@ -121,4 +163,54 @@ public class ConnectActivity extends ListActivity {
 			
 	}
 
+
+	protected void attemptConnection(final Integer position) {
+		new Thread( new Runnable(){
+			public void run(){
+				try
+				{
+
+					BluetoothDevice device = MainActivity.devices.getDevice(position);
+
+					MainActivity.vWand.disconnect();
+
+					//Create vWand connection
+					MainActivity.vWand.createConnection(device);
+
+					Boolean connected = MainActivity.vWand.isConnected();
+
+
+					Intent i = new Intent();
+					setResult(RESULT_OK, i);
+
+
+
+				}catch(IOException e)
+				{
+					mHandler.post(new Runnable() {
+						public void run() {
+							Toast tx;
+
+							tx = Toast.makeText(getApplicationContext(),
+									"Unable to connect", Toast.LENGTH_LONG);
+							tx.show();
+						}
+					});
+				}
+				finally
+				{
+					if(MainActivity.vWand.isConnected()) {
+						MainActivity.vibe.vibrate(3000);
+						MainActivity.mT2Service.speakText("V-Wand is Connected");
+					} else {
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+					}
+					//Finish activity and return to main activity.
+					finish();
+				}
+			}
+		}).start();
+	}
 }
+
+
