@@ -56,21 +56,22 @@ public class MainActivity extends NFCAbstractReadActivity {
         productButton = (Button) this.findViewById(R.id.product_button);
         nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
 
-        productButton.setOnClickListener(new View.OnClickListener() {
+        productButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 //If there are product info queued from a previous tag read
                 //Voice out the product info again
                 sayProductInfo();
+                return true;
             }
         });
-
-        nutritionButton.setOnClickListener(new View.OnClickListener() {
+        nutritionButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 //If there is nutritional info queued from a previous tag read
                 //Voice out the nutritional info.
                 sayNutritionInfo();
+                return true;
             }
         });
 
@@ -212,10 +213,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
 
-    // 1. For now, we run this in a new thread because we can't do IO on the main
-    //    thread. Once it is integrated, this would be called from the thread created
-    //    in onTagRead.
-    // 2. Some examples of (stopId, routeTag) are:
+    // 1. Some examples of (stopId, routeTag) are:
     //    (0127, 511) - Bathurst at Dundas
     //    (3079, 501) - Queen E at Yonge
     //    (3088, 501) - Queen E at Spadina
@@ -223,7 +221,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     //    You can get streetcar numbers here https://www.ttc.ca/Routes/Streetcars.jsp
     //    and get the stops for a streetcar here, replacing NUMBER
     //    http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=NUMBER
-    // 3. The format expected for the NFC tag would be ttc_stopID_routeTag.  The prefix
+    // 2. The format expected for the NFC tag would be ttc_stopID_routeTag.  The prefix
     //    is parsed in onTagRead and passed in here as stopId_routeTag.
     //    Example: onTagRead("ttc_3081_301")
 
