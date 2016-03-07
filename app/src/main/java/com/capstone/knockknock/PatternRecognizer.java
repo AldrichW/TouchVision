@@ -1,5 +1,7 @@
 package com.capstone.knockknock;
 
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.util.Log;
 
 import java.util.concurrent.ScheduledFuture;
@@ -7,6 +9,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import java.lang.Runnable;
+
 
 
 public class PatternRecognizer {
@@ -20,9 +23,10 @@ public class PatternRecognizer {
     ScheduledThreadPoolExecutor mExecutor = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
     KnockDetector p = null;
     private int detectedKnockCount = 0;
-
+    ToneGenerator toneGenerator = null;
     PatternRecognizer(KnockDetector parent){
         p = parent;
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, ToneGenerator.MAX_VOLUME);
     }
 
     private enum EventGenState_t {
@@ -84,6 +88,7 @@ public class PatternRecognizer {
                 Log.d("PatternRecognizer","Time out in Wait state");
                 break;
             case S1:
+                toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
                 startTimer(waitWindow_ms);
                 state = EventGenState_t.S2;
                 break;
@@ -93,10 +98,14 @@ public class PatternRecognizer {
                 state = EventGenState_t.Wait;
                 break;
             case S3:
+                toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
                 startTimer(waitWindow_ms);
                 state = EventGenState_t.S4;
                 break;
             case S4:
+                if(MAX_DETECTED == detectedKnockCount)
+                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
+
                 p.knockDetected(detectedKnockCount);
                 detectedKnockCount = 0;
                 state = EventGenState_t.Wait;
