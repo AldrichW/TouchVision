@@ -1,5 +1,6 @@
 package com.teamsight.touchvision;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.os.Vibrator;
@@ -57,8 +58,13 @@ public class InitialActivity extends Activity {
     }
 
     public void startVWandConnectActivity(){
+        //Create a new Intent and transition to the vWand connection
 
+        Intent i = new Intent(this, vWandConnectActivity.class);
 
+        //Do we need to pass in any special variables
+
+        startActivity(i);
     }
 
 }

@@ -39,7 +39,9 @@
             android:name=".sistelnetworks.activities.WriteActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden" />
-
+        <activity
+            android:name=".vWandConnectActivity"
+            android:label="@string/title_activity_v_wand_connect"></activity>
     </application>
 
 </manifest>

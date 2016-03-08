@@ -5,6 +5,7 @@ import android.media.AudioAttributes;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /**
