@@ -59,11 +59,7 @@ public class ReadActivity extends Activity {
 
 	
 	private Tag tag = null;
-	private TextView tvUID = null;
-	private TextView tvType = null;
-	private TextView tvContent = null;
 	private String content = "";
-	public static BDevicesArray devices = new BDevicesArray();
 	private Handler mHandler = new Handler();
 	
 	private boolean reading = true;

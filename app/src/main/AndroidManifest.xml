@@ -25,6 +25,10 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="com.teamsight.touchvision.VWandReadIntentService"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

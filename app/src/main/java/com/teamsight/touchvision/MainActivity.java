@@ -1,10 +1,13 @@
 package com.teamsight.touchvision;
 
-import android.app.Activity;
-import android.nfc.NfcAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,26 +15,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import org.json.JSONObject;
-import java.util.Locale;
 
-import java.util.Set;
-
-import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-
-import com.teamsight.touchvision.sistelnetworks.activities.*;
-import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
+import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
+
+import org.json.JSONObject;
+
+import java.util.Locale;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -48,13 +39,11 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String QUANTITY_KEY = "quantity";
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
-    private static final String CALORIE_KEY = "calories";
 
     // Intent request codes
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_CONNECT = 2;
     private static final int REQUEST_READ = 4;
-    private static final int REQUEST_WRITE = 5;
 
 
     private Button productButton;
@@ -80,6 +69,10 @@ public class MainActivity extends NFCAbstractReadActivity {
     //Tag contents from vWand reads
     public static String tagContent = null;
     public static String previousTagContent = null;
+
+
+    private Intent mIntentService;
+    private VWandStateReceiver mVWandStateReceiver;
 
 
 
@@ -120,13 +113,28 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         });
-        mT2Service.startService();
 
         mVWandService = new VWandService(); //Create instance of VWand
 
         vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
+
+        // The filter's action is BROADCAST_ACTION
+        IntentFilter statusIntentFilter = new IntentFilter(
+                Constants.BROADCAST_ACTION);
+
+        // Sets the filter's category to DEFAULT
+        statusIntentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+
+        // Instantiates a new DownloadStateReceiver
+        mVWandStateReceiver = new VWandStateReceiver();
+
+        // Registers the DownloadStateReceiver and its intent filters
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mVWandStateReceiver,
+                statusIntentFilter);
     }
 
+    @Override
     protected void onStart() {
         super.onStart();
 
@@ -134,10 +142,20 @@ public class MainActivity extends NFCAbstractReadActivity {
             Intent enableBtIntent = BluetoothService.activateBluetoothAdapter();
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-        else{
+        else if(!mVWandService.isVWandConnected()){
             mVWandService.connectToVWand();
         }
 
+        mIntentService = new Intent(MainActivity.this, VWandReadIntentService.class);
+        mIntentService.setData(null);
+        this.startService(mIntentService);
+
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        mVWandService.disconnectVWand();    //Kill off the VWand when the app is about to be destroyed.
     }
 
     @Override
@@ -213,6 +231,9 @@ public class MainActivity extends NFCAbstractReadActivity {
                             //Using the T2Service, output product name, product name, and quantity
                             sayProductInfo();
                             sayNutritionInfo();
+
+                            mIntentService.setData(null);
+                            MainActivity.this.startService(mIntentService);
                         }
                     });
                 }
@@ -278,5 +299,52 @@ public class MainActivity extends NFCAbstractReadActivity {
         }
     }
 
+    private class VWandStateReceiver extends BroadcastReceiver {
 
+        private VWandStateReceiver() {
+
+            // prevents instantiation by other packages.
+        }
+
+        /**
+         * This method is called by the system when a broadcast Intent is matched by this class'
+         * intent filters
+         *
+         * @param context An Android context
+         * @param intent  The incoming broadcast Intent
+         */
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            /*
+             * Gets the status from the Intent's extended data, and chooses the appropriate action
+             */
+            switch (intent.getIntExtra(Constants.EXTENDED_DATA_STATUS,
+                    Constants.STATE_ACTION_COMPLETE)) {
+
+                // Logs "started" state
+                case Constants.STATE_ACTION_STARTED:
+                    if (Constants.LOGD) {
+
+                        Log.d(LOG_TAG, "State: STARTED");
+                    }
+                    break;
+                // Logs "parsing the RSS feed" state
+                case Constants.STATE_ACTION_PARSING:
+                    if (Constants.LOGD) {
+
+                        Log.d(LOG_TAG, "State: PARSING");
+                    }
+                    break;
+                // Starts displaying data when the RSS download is complete
+                case Constants.STATE_ACTION_COMPLETE:
+                    // Logs the status
+                    onTagRead(tagContent);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
 }

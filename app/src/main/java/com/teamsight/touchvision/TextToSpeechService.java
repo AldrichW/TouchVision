@@ -23,10 +23,6 @@ public class TextToSpeechService {
         }
     }
 
-    public void startService(){
-
-    }
-
     public Boolean stopService() {
         if(mT2S != null){
             mT2S.shutdown();
