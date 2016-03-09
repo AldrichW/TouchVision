@@ -1,9 +1,7 @@
 package com.teamsight.touchvision;
 
 import android.content.Context;
-import android.media.AudioAttributes;
 import android.speech.tts.TextToSpeech;
-import android.speech.tts.Voice;
 
 import java.util.Locale;
 
@@ -22,7 +20,7 @@ public class TextToSpeechService {
             mT2S = new TextToSpeech(mContext, mListener);
         }
     }
-
+    
     public Boolean stopService() {
         if(mT2S != null){
             mT2S.shutdown();
@@ -32,22 +30,18 @@ public class TextToSpeechService {
     }
 
     public Boolean setVoice(Locale locale){
-        Voice voice = new Voice("default", locale, Voice.QUALITY_NORMAL, Voice.LATENCY_NORMAL, false, null);
-        int result = mT2S.setVoice(voice);
-        if(TextToSpeech.LANG_MISSING_DATA == result ||
-                TextToSpeech.LANG_NOT_SUPPORTED == result){
+        int result = mT2S.setLanguage(locale);
+        if(TextToSpeech.LANG_MISSING_DATA == result || TextToSpeech.LANG_NOT_SUPPORTED == result){
             return false;
         }
 
         return true;
     }
 
-    public synchronized void speakText(final String text){
-        while(mT2S.isSpeaking()) {
-            ;
+    public synchronized void speakText(final String text, final boolean queueIfBusy){
+        if(queueIfBusy || !mT2S.isSpeaking()) {
+            mT2S.speak(text, TextToSpeech.QUEUE_ADD, null);
         }
-        mT2S.playSilentUtterance(500, TextToSpeech.QUEUE_FLUSH, "");
-        mT2S.speak(text, TextToSpeech.QUEUE_ADD, null, "");
     }
 
 

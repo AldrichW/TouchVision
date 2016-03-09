@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.SensorManager;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
@@ -14,9 +16,24 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.widget.Toast;
 
 import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
+import com.capstone.knockknock.KnockDetector;
+
+import org.json.JSONObject;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
+
+import java.util.Locale;
+import java.util.Set;
+
+import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
+>>>>>>> master
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
@@ -25,10 +42,12 @@ import org.json.JSONObject;
 import java.util.Locale;
 
 
+
 public class MainActivity extends NFCAbstractReadActivity {
     public static TextToSpeechService mT2Service = null;
     public static VWandService mVWandService = null;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private KnockDetector mKnockDetector = null;
     public static Vibrator vibe;
 
 
@@ -45,18 +64,19 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final int REQUEST_CONNECT = 2;
     private static final int REQUEST_READ = 4;
 
-
     private Button productButton;
     private Button nutritionButton;
 
-    private String productName;
+    // Default values so we can test without a tag read
+    private String productName    = "no product name available";
     private double price;
     private int quantity;
     private String quantityUnit;
-    private String priceString;
-    private String quantityString;
+    private String priceString    = "no price available";
+    private String quantityString = "no quantity available";
     private int calorieCount;
-    private String calorieString;
+    private String calorieString  = "no calorie count available";
+
     private static com.teamsight.touchvision.sistelnetworks.activities.MainActivity vWandMainActivity;
 
 
@@ -75,7 +95,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     private VWandStateReceiver mVWandStateReceiver;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,21 +102,22 @@ public class MainActivity extends NFCAbstractReadActivity {
         productButton = (Button) this.findViewById(R.id.product_button);
         nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
 
-        productButton.setOnClickListener(new View.OnClickListener() {
+        productButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 //If there are product info queued from a previous tag read
                 //Voice out the product info again
                 sayProductInfo();
+                return true;
             }
         });
-
-        nutritionButton.setOnClickListener(new View.OnClickListener() {
+        nutritionButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 //If there is nutritional info queued from a previous tag read
                 //Voice out the nutritional info.
                 sayNutritionInfo();
+                return true;
             }
         });
 
@@ -113,6 +133,34 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         });
+
+        mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
+            @Override
+            protected void knockDetected(int knockCount) {
+                switch (knockCount){
+                    case 1:
+                        Log.d("knockDetected", "1 knocks");
+                        mT2Service.speakText(mOutputOneKnock, true);
+                        break;
+                    case 2:
+                        Log.d("knockDetected", "2 knocks");
+                        mT2Service.speakText(mOutputTwoKnock, true);
+                        break;
+                    case 3:
+                        Log.d("knockDetected", "3 knocks");
+                        mT2Service.speakText(mOutputThreeKnock, true);
+                        break;
+                    default:
+                        break;
+                }
+
+                mKnockDetector.pause();
+            }
+        };
+
+        // Initialize the knock detector but immediately pause it, as we will resume when needed.
+        mKnockDetector.init(null, null, null);
+        mKnockDetector.pause();
 
         mVWandService = new VWandService(); //Create instance of VWand
 
@@ -182,12 +230,8 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     @Override
     protected void onTagRead(final String tagMessage){
-        // TODO Auto-generated method stub
-        final TextView textView = (TextView) this.findViewById(R.id.tag_message_text);
-
+        final TextView textView      = (TextView) this.findViewById(R.id.tag_message_text);
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
-
-
 
         productIDView.setText(tagMessage);
         //TODO: BT service to monitor BT state to make sure that the vWand is still connected and is able to run
@@ -236,22 +280,121 @@ public class MainActivity extends NFCAbstractReadActivity {
                             MainActivity.this.startService(mIntentService);
                         }
                     });
+                if(tagMessage.substring(0, 4).equals("ttc_")) {
+                    onTtcTagRead(tagMessage.substring(4));
                 }
-                catch(Exception e){
-
+                else {
+                    onProductTagRead(tagMessage, textView);
                 }
             }
         }).start();
     }
 
-    protected void sayProductInfo(){
-        mT2Service.speakText(productName);
-        mT2Service.speakText(priceString);
-        mT2Service.speakText(quantityString);
+
+    protected void sayProductInfo() {
+        mT2Service.speakText("Knock once for product name, twice for price and three times for quantity.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(productName, priceString, quantityString);
     }
 
-    protected void sayNutritionInfo(){
-        mT2Service.speakText(calorieString);
+
+    protected void sayNutritionInfo() {
+        mT2Service.speakText("Knock once for calorie info.", false);
+
+        // Service will be paused after knockDetected
+        mKnockDetector.resume(calorieString, null, null);
+    }
+
+
+    protected void onProductTagRead(final String message, final TextView textView) {
+        HTTPBackendService bs = new HTTPBackendService();
+        String postData = bs.createPOSTDataWithProductIdentifier(message);
+        Log.d(LOG_TAG, postData);
+        final String postOutput = bs.sendPOSTRequest(null, postData);
+        try{
+            JSONObject jsonOut= new JSONObject(postOutput);
+            Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
+            Log.d(LOG_TAG, jsonOut.toString());
+            // Hard coding JSON key names. gross.
+            // Going to make a dedicated JSONParserService. Stay tuned
+            JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
+            productName = productOut.getString(PRODUCT_NAME_KEY);
+            price = productOut.getDouble(PRICE_KEY);
+            priceString = price + " dollars";
+            quantity = productOut.getInt(QUANTITY_KEY);
+            quantityUnit = productOut.getString(TYPE_KEY);
+            quantityString = String.valueOf(quantity) + " " + quantityUnit;
+
+            //At the moment the calorie info is being returned in the nutrition field
+            JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
+            calorieString = nutritionOut.getString(NUTRITION_KEY); 
+            calorieString = parseCalories(calorieString);
+
+            textView.post(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText(productName);
+                    textView.setText(calorieString);
+
+                    sayProductInfo();
+                    sayNutritionInfo();
+                }
+            });
+        }
+        catch(Exception e) {
+
+        }
+    }
+
+
+    // 1. Some examples of (stopId, routeTag) are:
+    //    (0127, 511) - Bathurst at Dundas
+    //    (3079, 501) - Queen E at Yonge
+    //    (3088, 501) - Queen E at Spadina
+    //    (3081, 301) - Queen W at Bathurst, 24 hours
+    //    You can get streetcar numbers here https://www.ttc.ca/Routes/Streetcars.jsp
+    //    and get the stops for a streetcar here, replacing NUMBER
+    //    http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=NUMBER
+    // 2. The format expected for the NFC tag would be ttc_stopID_routeTag.  The prefix
+    //    is parsed in onTagRead and passed in here as stopId_routeTag.
+    //    Example: onTagRead("ttc_3081_301")
+
+    protected void onTtcTagRead(final String tagData) {
+        final int underscoreIndex = tagData.indexOf("_");
+
+        final String stopId   = tagData.substring(0, underscoreIndex);
+        final String routeTag = tagData.substring(underscoreIndex + 1);
+
+        HTTPBackendService bs = new HTTPBackendService();
+        Document document = bs.sendGETRequest(null, stopId, routeTag);
+
+        Element predsElement = (Element) document.getElementsByTagName("predictions").item(0);
+
+        final String stopTitle = predsElement.getAttribute("stopTitle");
+        Log.d("parseTtcData", stopTitle);
+        mT2Service.speakText("The stop is " + stopTitle, true);
+
+        NodeList directionList = predsElement.getElementsByTagName("direction");
+
+        for(int i=0; i < directionList.getLength(); i++)
+        {
+            Element direction = (Element) directionList.item(i);
+            final String routeDirection = direction.getAttribute("title");
+            Log.d("parseTtcData", routeDirection);
+
+            Element closestPred = (Element) direction.getElementsByTagName("prediction").item(0);
+            final String minutesUntilArrival = closestPred.getAttribute("minutes");
+            Log.d("parseTtcData", minutesUntilArrival);
+
+            int _secondsUntilArrival = Integer.parseInt(closestPred.getAttribute("seconds"));
+            _secondsUntilArrival %= 60; // Seconds per minute
+            final String secondsUntilArrival = Integer.toString(_secondsUntilArrival);
+            Log.d("parseTtcData", secondsUntilArrival);
+
+            final String timeString = minutesUntilArrival + " minutes " + secondsUntilArrival + " seconds";
+            mT2Service.speakText("The arrival time for " + routeDirection + " is " + timeString, true);
+        }
     }
 
     protected String parseCalories (String calString) {

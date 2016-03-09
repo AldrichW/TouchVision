@@ -11,12 +11,10 @@
         android:layout_height="wrap_content"
         android:text="@string/nfc_tag"
         android:id="@+id/nfc_tag_text"
-        android:textSize="18dp"
-        android:textAlignment="center"
+        android:textSize="18sp"
         android:fontFamily="helvetica"
         android:textColor="@android:color/white"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentTop="true"/>
 
     <TextView
         android:layout_width="match_parent"
@@ -24,9 +22,7 @@
         android:text=""
         android:id="@+id/product_id_text"
         android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:textSize="24dp"
-        android:textAlignment="center"
+        android:textSize="24sp"
         android:fontFamily="helvetica"
         android:textColor="@android:color/white"
         android:layout_below="@id/nfc_tag_text"
@@ -38,9 +34,7 @@
         android:text="@string/product_info"
         android:id="@+id/product_info_text"
         android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:textSize="18dp"
-        android:textAlignment="center"
+        android:textSize="18sp"
         android:fontFamily="helvetica"
         android:textColor="@android:color/white"
         android:layout_below="@id/product_id_text"
@@ -52,9 +46,7 @@
         android:text=""
         android:id="@+id/tag_message_text"
         android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:textSize="24dp"
-        android:textAlignment="center"
+        android:textSize="24sp"
         android:fontFamily="helvetica"
         android:textColor="@android:color/white"
         android:layout_below="@id/product_info_text"
@@ -63,21 +55,20 @@
     <Button
         android:layout_width="300dp"
         android:layout_height="100dp"
-        android:text="product info"
+        android:text="@string/product_info"
         android:id="@+id/product_button"
         android:layout_above="@+id/nutrition_button"
-        android:layout_alignStart="@+id/nutrition_button"
-        android:textSize="36dp"/>
+        android:textSize="36sp"/>
 
     <Button
         android:layout_width="300dp"
         android:layout_height="100dp"
-        android:text="Nutrition Info"
+        android:text="@string/nutrition_info"
         android:id="@+id/nutrition_button"
         android:layout_marginBottom="45dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:textSize="36dp"/>
+        android:textSize="36sp"/>
 
 
 </RelativeLayout>
