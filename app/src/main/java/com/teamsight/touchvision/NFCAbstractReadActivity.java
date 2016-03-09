@@ -46,9 +46,7 @@ public abstract class NFCAbstractReadActivity extends Activity {
 
         //The hardware device supports NFC, but is currently disabled in the system settings
         if(!mNfcAdapter.isEnabled()){
-            Toast.makeText(mContext, "Please enable your NFC", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
-            startActivity(intent);
+            Toast.makeText(mContext, "Please go to settings and enable your NFC", Toast.LENGTH_SHORT).show();
         }
 
         //Cool, we have an initialized NFC adapter and it's enabled. Onwards

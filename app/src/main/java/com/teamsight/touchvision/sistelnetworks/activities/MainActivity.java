@@ -84,7 +84,6 @@ public class MainActivity extends Activity {
 		// Get instance from vWand
 		vWand = VWand.getInstance();
 
-		
 
 		btnConnect = (Button) findViewById(R.id.btnConnect);
 		btnConnect.setOnClickListener(new OnClickListener() {

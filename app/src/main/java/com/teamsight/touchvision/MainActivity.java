@@ -35,7 +35,8 @@ import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
-    public static TextToSpeechService mT2Service;
+    public static TextToSpeechService mT2Service = null;
+    public static VWandService mVWandService = null;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     public static Vibrator vibe;
 
@@ -82,12 +83,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
 
 
-    // Local Bluetooth Adapter
-    private	BluetoothAdapter mBluetoothAdapter = null;
-    private NfcAdapter mNFCAdapter = null;
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,24 +122,20 @@ public class MainActivity extends NFCAbstractReadActivity {
         });
         mT2Service.startService();
 
-       vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
+        mVWandService = new VWandService(); //Create instance of VWand
+
+        vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
     }
 
     protected void onStart() {
         super.onStart();
 
-
-        vWand = VWand.getInstance();
-
-        if(!vWand.isConnected()){
-
-            Toast tx;
-
-            tx = Toast.makeText(getApplicationContext(),
-                    "Bluetooth active", Toast.LENGTH_LONG);
-            tx.show();
-
-            activateBluetooth();
+        if(!BluetoothService.isBluetoothEnabled()){
+            Intent enableBtIntent = BluetoothService.activateBluetoothAdapter();
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+        else{
+            mVWandService.connectToVWand();
         }
 
     }
@@ -252,50 +243,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         return calString;
     }
 
-    /**
-     * This function refill the array of bonded devices. If Bluetooth is off then it is activated.*/
-
-    public void activateBluetooth() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (mBluetoothAdapter != null) {
-            // Device does not support Bluetooth
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(
-                        BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-            else
-            // Bluetooth adapter was on!
-            {
-
-                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-                // If there are paired devices
-                if (pairedDevices.size() > 0) {
-                    devices.clearDevices();
-                    // Loop through paired devices
-                    for (BluetoothDevice device : pairedDevices) {
-                        // Add the name and address to an array adapter to show in a
-                        // ListView
-                        devices.saveDevice(device);
-                        // mArrayAdapter.add(device.getName() + "\n" +
-                        // device.getAddress());
-
-                    }
-                    startConnectActivity();
-                }
-            }
-        }
-    }
-
-    /*
-     * This function starts Connect Activity*/
-
-    public void startConnectActivity() {
-        Intent i;
-        i = new Intent(this,  ConnectActivity.class);
-        startActivityForResult(i, REQUEST_CONNECT);
-    }
 
     /**
      * This function starts Read Activity.
@@ -311,24 +258,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == REQUEST_ENABLE_BT & resultCode == RESULT_OK) {
-
-            mBluetoothAdapter = BluetoothAdapter
-                    .getDefaultAdapter();
-
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-            // If there are paired devices
-            if (pairedDevices.size() > 0) {
-                devices.clearDevices();
-                // Loop through paired devices
-                for (BluetoothDevice device : pairedDevices) {
-                    // Add the name and address to an array adapter to show in a
-                    // ListView
-                    devices.saveDevice(device);
-
-
-                }
-                startConnectActivity();
-            }
+            assert(mVWandService != null);
+            mVWandService.connectToVWand();
 
         } else if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
 
