@@ -58,34 +58,29 @@ public class VWandReadIntentService extends IntentService {
             mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_STARTED);
 
             tag = vWand.startDetectCard();
+            
+            if (tag != null)
+            {
+                //vWand read function
+                NdefMessage message = vWand.readType2Tag();
 
-            reading = true;
+                mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_PARSING);
 
-            do{
-                if (tag != null)
-                {
-                    //vWand read function
-                    NdefMessage message = vWand.readType2Tag();
+                if (message != null) {
+                    if (message.getRecords().length > 0) {
 
-                    mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_PARSING);
+                        byte[] payload = message.getRecords()[0].getPayload();
 
-                    if (message != null) {
-                        if (message.getRecords().length > 0) {
-
-                            byte[] payload = message.getRecords()[0].getPayload();
-
-                            content = new String(payload, Charset.forName("US-ASCII"));
-                            //TODO:
-                            //This is a shitty h4xx0r way of doing it, need to build a smarter parser here
-                            content = content.substring(3);
-                            MainActivity.tagContent = content;
-                            reading = false;
-                            mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_COMPLETE);
-                        }
+                        content = new String(payload, Charset.forName("US-ASCII"));
+                        //TODO:
+                        //This is a shitty h4xx0r way of doing it, need to build a smarter parser here
+                        content = content.substring(3);
+                        MainActivity.tagContent = content;
+                        mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_COMPLETE);
                     }
                 }
+            }
 
-            } while (reading);
         }catch(Exception e)
         {
             e.printStackTrace();
