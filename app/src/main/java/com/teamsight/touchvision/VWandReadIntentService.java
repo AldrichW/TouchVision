@@ -58,7 +58,7 @@ public class VWandReadIntentService extends IntentService {
             mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_STARTED);
 
             tag = vWand.startDetectCard();
-            
+
             if (tag != null)
             {
                 //vWand read function

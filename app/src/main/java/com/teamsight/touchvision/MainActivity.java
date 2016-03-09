@@ -142,7 +142,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             Intent enableBtIntent = BluetoothService.activateBluetoothAdapter();
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-        else if(!mVWandService.isVWandConnected()){
+        while(!mVWandService.isVWandConnected()){
             mVWandService.connectToVWand();
         }
 
