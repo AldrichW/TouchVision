@@ -78,7 +78,7 @@ public class ConnectActivity extends ListActivity {
 		for (final Integer pos : devs.getvWands()) {
 
 			dialog = ProgressDialog.show(this, "", "Connecting to: " + devs.getDevice(pos).getName() + " ...", true, false);
-			MainActivity.mT2Service.speakText("Connecting to: V-Wand" + devs.getDevice(pos).getName().substring(5));
+			MainActivity.mT2Service.speakText("Connecting to: V-Wand" + devs.getDevice(pos).getName().substring(5), true);
 
 			attemptConnection(pos);
 
@@ -110,7 +110,7 @@ public class ConnectActivity extends ListActivity {
 		
 		final int pos = position;
 		dialog = ProgressDialog.show(this, "", "Connecting to: " + MainActivity.devices.getDevice(pos).getName() + " ...", true, false);
-		MainActivity.mT2Service.speakText("Connecting to: " + MainActivity.devices.getDevice(pos).getName());
+		MainActivity.mT2Service.speakText("Connecting to: " + MainActivity.devices.getDevice(pos).getName(), true);
 		
 		
 		new Thread( new Runnable(){    		
@@ -151,9 +151,9 @@ public class ConnectActivity extends ListActivity {
 					dialog.dismiss();
 
 					if(MainActivity.vWand.isConnected()) {
-						MainActivity.mT2Service.speakText("V-Wand is Connected");
+						MainActivity.mT2Service.speakText("V-Wand is Connected", true);
 					} else {
-						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand", true);
 					}
 					//Finish activity and return to main activity.
 					finish();
@@ -201,9 +201,9 @@ public class ConnectActivity extends ListActivity {
 				{
 					if(MainActivity.vWand.isConnected()) {
 						MainActivity.vibe.vibrate(3000);
-						MainActivity.mT2Service.speakText("V-Wand is Connected");
+						MainActivity.mT2Service.speakText("V-Wand is Connected", true);
 					} else {
-						MainActivity.mT2Service.speakText("Failed to connect to V-wand");
+						MainActivity.mT2Service.speakText("Failed to connect to V-wand", true);
 					}
 					//Finish activity and return to main activity.
 					finish();

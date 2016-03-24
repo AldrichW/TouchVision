@@ -30,16 +30,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 
 import java.util.Locale;
-import java.util.Set;
-
-import com.teamsight.touchvision.sistelnetworks.activities.ConnectActivity;
->>>>>>> master
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
-
-import org.json.JSONObject;
-
-import java.util.Locale;
 
 
 
@@ -134,6 +126,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
 
+        //Create our knock detector instance
         mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
             @Override
             protected void knockDetected(int knockCount) {
@@ -244,8 +237,8 @@ public class MainActivity extends NFCAbstractReadActivity {
                 String postData = bs.createPOSTDataWithProductIdentifier(message);
                 Log.d(LOG_TAG, postData);
                 final String postOutput = bs.sendPOSTRequest(null, postData);
-                try{
-                    JSONObject jsonOut= new JSONObject(postOutput);
+                try {
+                    JSONObject jsonOut = new JSONObject(postOutput);
                     Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
                     Log.d(LOG_TAG, jsonOut.toString());
                     // Hard coding JSON key names. gross.
@@ -280,6 +273,10 @@ public class MainActivity extends NFCAbstractReadActivity {
                             MainActivity.this.startService(mIntentService);
                         }
                     });
+                }
+                catch(Exception e){
+
+                }
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
                     onTtcTagRead(tagMessage.substring(4));
                 }
@@ -482,6 +479,9 @@ public class MainActivity extends NFCAbstractReadActivity {
                 // Starts displaying data when the RSS download is complete
                 case Constants.STATE_ACTION_COMPLETE:
                     // Logs the status
+                    assert(vibe != null);
+                    vibe.vibrate(1000); //vibrate for one second
+
                     onTagRead(tagContent);
                     break;
                 default:

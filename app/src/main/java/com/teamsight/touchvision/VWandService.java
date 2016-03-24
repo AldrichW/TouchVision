@@ -52,7 +52,7 @@ public class VWandService {
         if(vWand.isConnected()){
             //vWand instance is already connected
             MainActivity.vibe.vibrate(500);
-            MainActivity.mT2Service.speakText("V-Wand is Connected");
+            MainActivity.mT2Service.speakText("V-Wand is Connected", true);
             return true;
         }
 
@@ -64,16 +64,16 @@ public class VWandService {
         }
 
         for (final Integer pos : vWandDevices) {
-            MainActivity.mT2Service.speakText("Connecting to: V-Wand" + BluetoothService.devices.getDevice(pos).getName().substring(5));
+            MainActivity.mT2Service.speakText("Connecting to: V-Wand" + BluetoothService.devices.getDevice(pos).getName().substring(5), true);
 
             if(attemptConnection(pos)){
                 MainActivity.vibe.vibrate(500);
-                MainActivity.mT2Service.speakText("V-Wand is Connected");
+                MainActivity.mT2Service.speakText("V-Wand is Connected", true);
                 return true;
             }
         }
 
-        MainActivity.mT2Service.speakText("V-Wand Failed to connect");
+        MainActivity.mT2Service.speakText("V-Wand Failed to connect", true);
         return false;
 
     }
@@ -104,88 +104,5 @@ public class VWandService {
 
             return false;
         }
-    }
-
-    public boolean startReading(){
-        if(null == vWand || !vWand.isConnected()){
-            return false;
-        }
-
-        //VWand is connected and active
-        //Start Reading background service
-
-        new Thread(new Runnable() {
-            public void run() {
-
-                do{
-                    try
-                    {
-                        //Wake-up device
-                        vWand.startvWand();
-                        tag = vWand.startDetectCard();
-
-                        if (tag != null)
-                        {
-                            //vWand read function
-                            NdefMessage message = vWand.readType2Tag();
-                            // If the message is not empty
-                            if (message != null)
-                            {
-                                if (message.getRecords().length > 0)
-                                {
-
-                                    byte[] payload = message.getRecords()[0].getPayload();
-                                    byte[] uri = {(byte) 0x55};
-
-                                    if (Arrays.equals(message.getRecords()[0].getType(), uri))
-                                    {
-                                        byte identifierCode = payload[0]; //The first byte is the URI identifier Code.
-
-                                        String prefix = Util.getProtocolPrefix(identifierCode);
-                                        String url = prefix +
-                                                new String(payload, 1, payload.length -1, Charset.forName("US-ASCII"));
-                                        //Create intent (only if NdefRecord is URI type.)
-                                        try
-                                        {
-                                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-											/*startActivity(intent);*/
-                                        }catch(Exception ex)
-                                        {
-                                            Log.e(TAG, "Exception thrown for starting intent");
-                                        }
-                                    }
-                                    content = new String(payload, Charset.forName("US-ASCII"));
-                                    content = content.substring(3);
-                                    MainActivity.tagContent = content;//This is a shitty h4xx0r way of doing it, need to build a smarter parser here
-
-                                    mHandler.post(new Runnable() {
-                                        public void run() {
-
-                                            //This is to make sure that if we're re-reading the same tag we don't keep repeating the content.
-                                            if (!content.equals(com.teamsight.touchvision.MainActivity.previousTagContent)) {
-                                                //This was for debug!
-                                                MainActivity.previousTagContent = content;
-                                            } else {
-                                                //com.teamsight.touchvision.MainActivity.mT2Service.speakText("Should stop reading now");
-                                                reading = false;
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                            Thread.sleep(1 * 1000); //Waiting to read again.
-                        }
-
-                    }catch(Exception e)
-                    {
-                        e.printStackTrace();
-                        Log.e(TAG, "Failed to read tag");
-                    }
-                }while(reading);
-
-            }
-        }).start();
-
-        return false;
     }
 }
