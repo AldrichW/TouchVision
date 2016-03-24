@@ -22,17 +22,6 @@ import java.util.Vector;
  */
 public class VWandService {
 
-    // Debugging
-    private static final String TAG = "ReadActivity";
-
-
-    private Tag tag = null;
-    private String content = "";
-    public static BDevicesArray devices = new BDevicesArray();
-    private Handler mHandler = new Handler();
-
-    private boolean reading = true;
-
     // vWand object for connect and communicate to vWand
     public static VWand vWand = null;
 

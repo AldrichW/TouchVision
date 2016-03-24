@@ -16,9 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.widget.Toast;
 
 import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
@@ -32,7 +29,6 @@ import org.w3c.dom.Document;
 import java.util.Locale;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
-
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -146,7 +142,6 @@ public class MainActivity extends NFCAbstractReadActivity {
                     default:
                         break;
                 }
-
                 mKnockDetector.pause();
             }
         };

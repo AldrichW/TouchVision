@@ -24,8 +24,6 @@ public class VWandReadIntentService extends IntentService {
 
     private BroadcastNotifier mBroadcastNotifier = null;
 
-    private boolean reading = false;
-
     private Tag tag = null;
     private String content = "";
     //VWand instance
