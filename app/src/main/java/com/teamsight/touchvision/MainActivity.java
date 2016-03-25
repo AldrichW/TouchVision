@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -71,12 +73,15 @@ public class MainActivity extends NFCAbstractReadActivity {
     // Array of Bluetooth detected devices
     public static BDevicesArray devices = new BDevicesArray();
 
-    // vWand object for connect and communicate to vWand
+    // vWand object for connecting to and communicating with vWand
     public static VWand vWand = null;
 
     //Tag contents from vWand reads
     public static String tagContent = null;
     public static String previousTagContent = null;
+
+    //ToneGenerator to give us a beep on successful reads
+    final ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100);
 
 
     private Intent mIntentService;
@@ -430,6 +435,13 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
 
         } else if (requestCode == REQUEST_READ) {
+
+            //Sets vibration pattern for a successful read; vibrate for 300ms, stop for 150, then repeat
+            long[] vibePattern = {0, 300, 150, 300, 150};
+            vibe.vibrate(vibePattern, 2);
+
+            //Plays a beep sound to notify user of successful read.
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP);
             onTagRead(tagContent);
         }
     }
@@ -475,8 +487,13 @@ public class MainActivity extends NFCAbstractReadActivity {
                 case Constants.STATE_ACTION_COMPLETE:
                     // Logs the status
                     assert(vibe != null);
-                    vibe.vibrate(1000); //vibrate for one second
 
+                    //Sets vibration pattern for a successful read; vibrate for 300ms, stop for 150, then repeat
+                    long[] vibePattern = {0, 300, 150, 300, 150};
+                    vibe.vibrate(vibePattern, 2);
+
+                    //Plays a beep sound to notify user of successful read.
+                    tg.startTone(ToneGenerator.TONE_PROP_BEEP);
                     onTagRead(tagContent);
                     break;
                 default:

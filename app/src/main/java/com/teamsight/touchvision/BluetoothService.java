@@ -42,8 +42,7 @@ public class BluetoothService {
             return null;    //Bluetooth is not enabled.
         }
 
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter
-                .getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
         // If there are paired devices
         if (pairedDevices.size() > 0) {
             devices.clearDevices();

@@ -40,7 +40,7 @@ public class VWandService {
 
         if(vWand.isConnected()){
             //vWand instance is already connected
-            MainActivity.vibe.vibrate(500);
+            MainActivity.vibe.vibrate(750);
             MainActivity.mT2Service.speakText("V-Wand is Connected", true);
             return true;
         }
@@ -56,7 +56,8 @@ public class VWandService {
             MainActivity.mT2Service.speakText("Connecting to: V-Wand" + BluetoothService.devices.getDevice(pos).getName().substring(5), true);
 
             if(attemptConnection(pos)){
-                MainActivity.vibe.vibrate(500);
+                //This means attemptConnection returned true, so the connection was successful, notify user via haptic feedback and TTS
+                MainActivity.vibe.vibrate(750);
                 MainActivity.mT2Service.speakText("V-Wand is Connected", true);
                 return true;
             }
