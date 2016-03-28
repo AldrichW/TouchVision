@@ -51,6 +51,10 @@ public class PatternRecognizer {
         timerFuture = mExecutor.schedule(waitTimer, timeToWait, TimeUnit.MILLISECONDS);
     }
 
+    private void beep() {
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
+    }
+
     public void turnOff() {
         Log.d("PatternRecognizer", "turnOff");
         detectedKnockCount = 0;
@@ -62,7 +66,7 @@ public class PatternRecognizer {
         Log.d("PatternRecognizer", "turnOn");
         detectedKnockCount = 0;
         state = EventGenState_t.Wait;
-        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
+        beep();
         startTimer(initialWindow_ms);
     }
 
@@ -73,6 +77,7 @@ public class PatternRecognizer {
             case Wait:
                 detectedKnockCount++;
                 startTimer(minWaitTime_ms);
+                beep();
                 state =  EventGenState_t.S1;
                 break;
             case S1:
@@ -82,12 +87,16 @@ public class PatternRecognizer {
                 detectedKnockCount++;
                 timerFuture.cancel(false);
                 startTimer(minWaitTime_ms);
+                beep();
                 state = EventGenState_t.S3;
                 break;
             case S3:
                 // In minWaitTime, ignore knock
                 break;
             case S4:
+                if (detectedKnockCount < MAX_DETECTED)
+                    beep();
+
                 detectedKnockCount = Math.min(MAX_DETECTED, detectedKnockCount + 1);
                 break;
             default:
@@ -102,10 +111,10 @@ public class PatternRecognizer {
         switch(state){
             case Wait:
                 Log.d("PatternRecognizer","Time out in Wait state");
+                beep();
                 p.knockDetected(detectedKnockCount);
                 break;
             case S1:
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
                 startTimer(waitWindow_ms);
                 state = EventGenState_t.S2;
                 break;
@@ -115,7 +124,6 @@ public class PatternRecognizer {
                 state = EventGenState_t.Wait;
                 break;
             case S3:
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
                 startTimer(waitWindow_ms);
                 state = EventGenState_t.S4;
                 break;

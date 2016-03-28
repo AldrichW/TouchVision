@@ -119,7 +119,7 @@ public class MainActivity extends NFCAbstractReadActivity {
                 switch (knockCount){
                     case 0:
                         Log.d("knockDetected", "0 knocks");
-                        mT2Service.speakText("No knock detected.", true);
+                        mT2Service.speakText("Zero knocks detected.", true);
                         break;
                     case 1:
                         Log.d("knockDetected", "1 knocks");
