@@ -43,7 +43,7 @@ public class AccelSpikeDetector implements SensorEventListener {
         mSensorManager.unregisterListener(this);
     }
 
-    public void resumeAccSensing(){
+    public void startAccSensing(){
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), mSensorManager.SENSOR_DELAY_FASTEST);
     }
 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,6 +26,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     private TextToSpeechService mT2Service;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private KnockDetector mKnockDetector = null;
+
+    private static final String ID_KNOCK_DETECTOR_RESUME = "id_knockDetectorResume";
 
     //JSON Output key constants
     private static final String PRODUCT_KEY = "product";
@@ -75,15 +78,37 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
 
-        mT2Service = new TextToSpeechService(getApplicationContext(), new TextToSpeech.OnInitListener() {
+        mT2Service = new TextToSpeechService(getApplicationContext(),
+            new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 Log.d(LOG_TAG, "Text To Speech Service started!");
-                if(TextToSpeech.SUCCESS == status){
-                    if(mT2Service.setVoice(Locale.US)){
+                if (TextToSpeech.SUCCESS == status) {
+                    if (mT2Service.setVoice(Locale.US)) {
                         Log.d(LOG_TAG, "Voice set successfully!");
                         Log.d(LOG_TAG, "Text To Speech service ready to take requests");
                     }
+
+                    mT2Service.setProgressListener(new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String utteranceId) {
+                            Log.d("ProgressListener", "Speech Utterance Progress Started");
+                        }
+
+                        @Override
+                        public void onDone(String utteranceId) {
+                            Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
+
+                            if (utteranceId.equals(ID_KNOCK_DETECTOR_RESUME)) {
+                                mKnockDetector.resume();
+                            }
+                        }
+
+                        @Override
+                        public void onError(String utteranceId) {
+                            Log.d("ProgressListener", "Speech Utterance Error");
+                        }
+                    });
                 }
             }
         });
@@ -116,9 +141,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         };
 
-        // Initialize the knock detector but immediately pause it, as we will resume when needed.
-        mKnockDetector.init(null, null, null);
-        mKnockDetector.pause();
+        mKnockDetector.init();
     }
 
     @Override
@@ -164,18 +187,19 @@ public class MainActivity extends NFCAbstractReadActivity {
 
 
     protected void sayProductInfo() {
-        mT2Service.speakText("Knock once for product name, twice for price and three times for quantity.", false);
-
         // Service will be paused after knockDetected
-        mKnockDetector.resume(productName, priceString, quantityString);
+        mKnockDetector.registerStrings(productName, priceString, quantityString);
+
+        final String message = "Knock once for product name, twice for price and three times for quantity.";
+        mT2Service.speakText(message, false, ID_KNOCK_DETECTOR_RESUME);
     }
 
 
     protected void sayNutritionInfo() {
-        mT2Service.speakText("Knock once for calorie info.", false);
-
         // Service will be paused after knockDetected
-        mKnockDetector.resume(calorieString, null, null);
+        mKnockDetector.registerStrings(calorieString, null, null);
+
+        mT2Service.speakText("Knock once for calorie info.", false, ID_KNOCK_DETECTOR_RESUME);
     }
 
 

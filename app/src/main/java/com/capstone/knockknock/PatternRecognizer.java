@@ -14,8 +14,9 @@ import java.lang.Runnable;
 
 public class PatternRecognizer {
 
-    final long minWaitTime_ms = 250; // The time-window when knocks will NOT be acknowledged
-    final long waitWindow_ms = 1000; // The time-window when knocks WILL be acknowledged, after minWait
+    final long minWaitTime_ms = 500; // The time-window when knocks will NOT be acknowledged
+    final long waitWindow_ms = 1500; // The time-window when knocks WILL be acknowledged, after minWait
+    final long initialWindow_ms = 4000; // the time-window when listening for the first knock.
     final int MAX_DETECTED = 3;
 
     private ScheduledFuture<?> timerFuture = null ;
@@ -48,6 +49,21 @@ public class PatternRecognizer {
             timerFuture.cancel(false);
         }
         timerFuture = mExecutor.schedule(waitTimer, timeToWait, TimeUnit.MILLISECONDS);
+    }
+
+    public void turnOff() {
+        Log.d("PatternRecognizer", "turnOff");
+        detectedKnockCount = 0;
+        state = EventGenState_t.Wait;
+        timerFuture.cancel(false);
+    }
+
+    public void turnOn() {
+        Log.d("PatternRecognizer", "turnOn");
+        detectedKnockCount = 0;
+        state = EventGenState_t.Wait;
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
+        startTimer(initialWindow_ms);
     }
 
     public void knockEvent() {
@@ -104,9 +120,6 @@ public class PatternRecognizer {
                 state = EventGenState_t.S4;
                 break;
             case S4:
-                if(MAX_DETECTED == detectedKnockCount)
-                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
-
                 p.knockDetected(detectedKnockCount);
                 detectedKnockCount = 0;
                 state = EventGenState_t.Wait;
