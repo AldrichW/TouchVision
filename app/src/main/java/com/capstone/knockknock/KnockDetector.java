@@ -32,15 +32,16 @@ abstract public class KnockDetector implements Callback {
         mIsActive = false;
     }
 
-    public void init(final String oneKnock, final String twoKnock, final String threeKnock) {
+    public void init() {
         mAccelSpikeDetector = new AccelSpikeDetector(mParentSensorManager);
         assert(false == mIsActive);
-        resume(oneKnock, twoKnock, threeKnock);
+        registerStrings(null, null, null);
     }
 
     public void pause() {
         mAccelSpikeDetector.stopAccSensing();
         mAccelSpikeDetector.unregisterCallback();
+        mPatt.turnOff();
 
         mOutputOneKnock   = null;
         mOutputTwoKnock   = null;
@@ -49,16 +50,21 @@ abstract public class KnockDetector implements Callback {
         mIsActive = false;
     }
 
-    public void resume(final String oneKnock, final String twoKnock, final String threeKnock) {
+    public void resume() {
         if(!mIsActive){
-            mAccelSpikeDetector.resumeAccSensing();
-            mAccelSpikeDetector.registerCallback(this);
+            mIsActive = true;
 
+            mPatt.turnOn();
+            mAccelSpikeDetector.startAccSensing();
+            mAccelSpikeDetector.registerCallback(this);
+        }
+    }
+
+    public void registerStrings(final String oneKnock, final String twoKnock, final String threeKnock) {
+        if(!mIsActive){
             mOutputOneKnock   = oneKnock;
             mOutputTwoKnock   = twoKnock;
             mOutputThreeKnock = threeKnock;
-
-            mIsActive = true;
         }
     }
 

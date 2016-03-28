@@ -18,14 +18,12 @@ public class AccelSpikeDetector implements SensorEventListener {
     private Callback callbackMethod;
 
     // Forces are in m/s^2
-    final public float minAccelZ = 5;
-    final public float minAccelX = 5;
-    final public float minAccelY = 5;
+    final public float minAccelZ    = 5;
+    final public float maxAccelHori = 20;
 
     //For high pass filter
-    private float currentAccelZ = 0;
-    private float currentAccelX = 0;
-    private float currentAccelY = 0;
+    private float currentAccelZ    = 0;
+    private float currentAccelHori = 0;
 
     AccelSpikeDetector(SensorManager sm){
         mSensorManager = sm;
@@ -43,18 +41,18 @@ public class AccelSpikeDetector implements SensorEventListener {
         mSensorManager.unregisterListener(this);
     }
 
-    public void resumeAccSensing(){
+    public void startAccSensing(){
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), mSensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public void onSensorChanged(SensorEvent event) {
-        currentAccelX = Math.abs(event.values[0]); // X-axis
-        currentAccelY = Math.abs(event.values[1]); // Y-axis
+        currentAccelHori = event.values[1] * event.values[1] +
+                           event.values[0] * event.values[0];
         currentAccelZ = Math.abs(event.values[2]); // Z-axis
 
         // Z force must be above some limit, the other forces below some limit to filter out shaking motions
-        if (currentAccelZ > minAccelZ && currentAccelX < minAccelX && currentAccelY < minAccelY){
-            String log = "currXVal:" + currentAccelX + " currYVal:" + currentAccelY + " currZVal:" + currentAccelZ;
+        if (currentAccelZ > minAccelZ && currentAccelHori < maxAccelHori) {
+            final String log = "currHorizontalVal:" + currentAccelHori + " currZVal:" + currentAccelZ;
             Log.d("AccelSpikeDetector", "onSensorChanged " + log);
             callbackMethod.knockEvent();
         }

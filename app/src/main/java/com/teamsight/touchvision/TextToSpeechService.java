@@ -2,7 +2,9 @@ package com.teamsight.touchvision;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 /**
@@ -10,15 +12,17 @@ import java.util.Locale;
  */
 public class TextToSpeechService {
     private Context mContext;
-    private TextToSpeech.OnInitListener mListener;
     private TextToSpeech mT2S;
 
-    public TextToSpeechService(Context applicationContext, TextToSpeech.OnInitListener listener){
+    public TextToSpeechService(Context applicationContext, TextToSpeech.OnInitListener initListener){
         mContext = applicationContext;
-        mListener = listener;
         if(mT2S == null){
-            mT2S = new TextToSpeech(mContext, mListener);
+            mT2S = new TextToSpeech(mContext, initListener);
         }
+    }
+
+    public void setProgressListener(UtteranceProgressListener progressListener){
+        mT2S.setOnUtteranceProgressListener(progressListener);
     }
 
     public Boolean setVoice(Locale locale){
@@ -30,9 +34,21 @@ public class TextToSpeechService {
         return true;
     }
 
-    public synchronized void speakText(final String text, final boolean queueIfBusy){
+    public synchronized void speakText(final String text,
+                                       final boolean queueIfBusy){
         if(queueIfBusy || !mT2S.isSpeaking()) {
             mT2S.speak(text, TextToSpeech.QUEUE_ADD, null);
+        }
+    }
+
+    public synchronized void speakText(final String text,
+                                       final boolean queueIfBusy,
+                                       final String utteranceID){
+        if(queueIfBusy || !mT2S.isSpeaking()) {
+            HashMap<String, String> params = new HashMap<String, String>();
+            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceID);
+
+            mT2S.speak(text, TextToSpeech.QUEUE_ADD, params);
         }
     }
 
