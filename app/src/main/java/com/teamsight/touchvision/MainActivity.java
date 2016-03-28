@@ -92,6 +92,10 @@ public class MainActivity extends NFCAbstractReadActivity {
             @Override
             protected void knockDetected(int knockCount) {
                 switch (knockCount){
+                    case 0:
+                        Log.d("knockDetected", "0 knocks");
+                        mT2Service.speakText("No knock detected.", true);
+                        break;
                     case 1:
                         Log.d("knockDetected", "1 knocks");
                         mT2Service.speakText(mOutputOneKnock, true);

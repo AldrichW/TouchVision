@@ -86,6 +86,7 @@ public class PatternRecognizer {
         switch(state){
             case Wait:
                 Log.d("PatternRecognizer","Time out in Wait state");
+                p.knockDetected(detectedKnockCount);
                 break;
             case S1:
                 toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 10);
@@ -111,7 +112,7 @@ public class PatternRecognizer {
                 state = EventGenState_t.Wait;
                 break;
             default:
-                Log.d("PatternRecognizer","timeOutEvent: Invalid state");
+                Log.d("PatternRecognizer", "timeOutEvent: Invalid state");
                 break;
         }
     }
