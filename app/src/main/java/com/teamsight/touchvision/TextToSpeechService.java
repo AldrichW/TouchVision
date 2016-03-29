@@ -28,7 +28,11 @@ public class TextToSpeechService {
             mT2S = new TextToSpeech(mContext, initListener);
         }
     }
-    
+
+    public Boolean startService() {
+        return true;
+    }
+
     public Boolean stopService() {
         if(mT2S != null){
             mT2S.shutdown();

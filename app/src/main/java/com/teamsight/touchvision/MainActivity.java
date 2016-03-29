@@ -148,6 +148,10 @@ public class MainActivity extends NFCAbstractReadActivity {
                         }
                     });
                 }
+
+                else{
+                    mT2Service.startService();
+                }
             }
         });
 
@@ -308,6 +312,9 @@ public class MainActivity extends NFCAbstractReadActivity {
                 public void run() {
                     textView.setText(productName);
                     mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
+
+                    mIntentService.setData(null);
+                    MainActivity.this.startService(mIntentService);
                 }
             });
         }
@@ -348,6 +355,9 @@ public class MainActivity extends NFCAbstractReadActivity {
                     textView.setText(calorieString);
 
                     sayProductInfo();
+
+                    mIntentService.setData(null);
+                    MainActivity.this.startService(mIntentService);
                 }
             });
         }
