@@ -7,7 +7,6 @@ import android.content.IntentFilter;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
-import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
@@ -65,7 +64,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     private String quantityUnit;
     private String priceString    = "no price available";
     private String quantityString = "no quantity available";
-    private int calorieCount;
     private String calorieString  = "no calorie count available";
 
     private static com.teamsight.touchvision.sistelnetworks.activities.MainActivity vWandMainActivity;
@@ -255,55 +253,8 @@ public class MainActivity extends NFCAbstractReadActivity {
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
 
         productIDView.setText(tagMessage);
-        //TODO: BT service to monitor BT state to make sure that the vWand is still connected and is able to run
-        //TODO: WIFI Monitoring in the HTTPBackendService.
-        //TODO: May want to move the thread instantiation into the actual HTTPBackendService, that way the thread management is dealt with there
         new Thread(new Runnable() {
             public void run() {
-                String message = tagMessage;
-                HTTPBackendService bs = new HTTPBackendService();
-                String postData = bs.createPOSTDataWithProductIdentifier(message);
-                Log.d(LOG_TAG, postData);
-                final String postOutput = bs.sendPOSTRequest(null, postData);
-                try {
-                    JSONObject jsonOut = new JSONObject(postOutput);
-                    Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
-                    Log.d(LOG_TAG, jsonOut.toString());
-                    // Hard coding JSON key names. gross.
-                    // Going to make a dedicated JSONParserService. Stay tuned
-                    JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
-                    productName = productOut.getString(PRODUCT_NAME_KEY);
-                    price = productOut.getDouble(PRICE_KEY);
-                    priceString = price + " dollars";
-                    quantity = productOut.getInt(QUANTITY_KEY);
-                    quantityUnit = productOut.getString(TYPE_KEY);
-                    quantityString = String.valueOf(quantity) + " " + quantityUnit;
-
-
-                    JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-                    calorieString = nutritionOut.getString(NUTRITION_KEY); //At the moment the calorie info is being returned in the nutrition field
-
-                    calorieString = parseCalories(calorieString);
-
-                    textView.post(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            //First set the text on the screen, then use the T2S Service to read out all the info.
-                            textView.setText(productName);
-                            textView.setText(calorieString);
-
-                            //Using the T2Service, output product name, product name, and quantity
-                            sayProductInfo();
-
-                            mIntentService.setData(null);
-                            MainActivity.this.startService(mIntentService);
-                        }
-                    });
-                }
-                catch(Exception e){
-
-                }
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
                     onTtcTagRead(tagMessage.substring(4), textView);
                 }
