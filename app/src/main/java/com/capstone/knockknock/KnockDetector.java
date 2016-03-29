@@ -39,15 +39,17 @@ abstract public class KnockDetector implements Callback {
     }
 
     public void pause() {
-        mAccelSpikeDetector.stopAccSensing();
-        mAccelSpikeDetector.unregisterCallback();
-        mPatt.turnOff();
+        if(mIsActive){
+            mAccelSpikeDetector.stopAccSensing();
+            mAccelSpikeDetector.unregisterCallback();
+            mPatt.turnOff();
 
-        mOutputOneKnock   = null;
-        mOutputTwoKnock   = null;
-        mOutputThreeKnock = null;
+            mOutputOneKnock   = null;
+            mOutputTwoKnock   = null;
+            mOutputThreeKnock = null;
 
-        mIsActive = false;
+            mIsActive = false;
+        }
     }
 
     public void resume() {
