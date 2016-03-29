@@ -277,7 +277,7 @@ public class MainActivity extends NFCAbstractReadActivity {
         mKnockDetector.pause();
         mKnockDetector.registerStrings(priceString, quantityString, calorieString);
 
-        final String message = "The product is " + productName +
+        final String message = "The product is " + productName + ". The price is " + priceString +
                 ". Knock once for the price, twice for the quantity, and three times for the calories.";
         mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY,
                                       TextToSpeechService.ID_KNOCK_DETECTOR_RESUME);
