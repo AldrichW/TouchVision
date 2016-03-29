@@ -29,6 +29,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 
 import java.util.Locale;
+import java.util.StringTokenizer;
+
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
@@ -64,7 +66,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     private String quantityUnit;
     private String priceString    = "no price available";
     private String quantityString = "no quantity available";
-    private String calorieString  = "no calorie count available";
+    private String nutritionString = "no nutrition information available";
 
     private static com.teamsight.touchvision.sistelnetworks.activities.MainActivity vWandMainActivity;
 
@@ -275,7 +277,7 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     protected void sayProductInfo() {
         mKnockDetector.pause();
-        mKnockDetector.registerStrings(priceString, quantityString, calorieString);
+        mKnockDetector.registerStrings(priceString, quantityString, nutritionString);
 
         final String message = "The product is " + productName + ". The price is " + priceString +
                 ". Knock once for the price, twice for the quantity, and three times for the calories.";
@@ -286,7 +288,7 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     protected void sayNutritionInfo() {
         mKnockDetector.pause();
-        mKnockDetector.registerStrings(calorieString, null, null);
+        mKnockDetector.registerStrings(nutritionString, null, null);
 
         final String message = "Knock once for calorie info.";
         mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY,
@@ -345,14 +347,14 @@ public class MainActivity extends NFCAbstractReadActivity {
 
             //At the moment the calorie info is being returned in the nutrition field
             JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-            calorieString = nutritionOut.getString(NUTRITION_KEY); 
-            calorieString = parseCalories(calorieString);
+            nutritionString = nutritionOut.getString(NUTRITION_KEY);
+            nutritionString = parseNutrition(nutritionString);
 
             textView.post(new Runnable() {
                 @Override
                 public void run() {
                     textView.setText(productName);
-                    textView.setText(calorieString);
+                    textView.setText(nutritionString);
 
                     sayProductInfo();
 
@@ -424,16 +426,17 @@ public class MainActivity extends NFCAbstractReadActivity {
         }
     }
 
-    protected String parseCalories (String calString) {
-        Integer calStartLoc = calorieString.indexOf(">") + 1;
-        Integer calEndLoc = calorieString.indexOf("}");
-        calString = calString.substring(calStartLoc, calEndLoc);
+    protected String parseNutrition(String nutritionString) {
+        String[] stringParts = nutritionString.split("[=>\"]+");
 
-        calString += " calories";
+        String returnString = "";
 
-        return calString;
+        for(String string: stringParts) {
+            returnString += (string + " ");
+        }
+
+        return returnString;
     }
-
 
     /**
      * This function starts Read Activity.
