@@ -14,16 +14,12 @@ import java.util.Locale;
 public class TextToSpeechService {
     public static final boolean FLUSH_IF_BUSY = false;
     public static final boolean DROP_IF_BUSY  = true;
-    public static final String ID_KNOCK_DETECTOR_RESUME = "id_knockDetectorResume";
-
-    private int mNumActivePrompts;
 
     private Context mContext;
     private TextToSpeech mT2S;
 
     public TextToSpeechService(Context applicationContext, TextToSpeech.OnInitListener initListener){
         mContext = applicationContext;
-        mNumActivePrompts = 0;
         if(mT2S == null){
             mT2S = new TextToSpeech(mContext, initListener);
         }
@@ -50,10 +46,8 @@ public class TextToSpeechService {
         return true;
     }
 
-    public boolean isLastDone() {
-        mNumActivePrompts--;
-        Log.d("TextToSpeechService", "Num Active Prompts: " + mNumActivePrompts);
-        return (0 == mNumActivePrompts);
+    public void interruptSpeech() {
+        mT2S.stop();
     }
 
     public synchronized void speakText(final String text,
@@ -61,26 +55,6 @@ public class TextToSpeechService {
         if(busyAction == FLUSH_IF_BUSY || !mT2S.isSpeaking()) {
             mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, null);
         }
-        else{   //add to the Text to Speech queue
-            mT2S.speak(text, TextToSpeech.QUEUE_ADD, null);
-        }
     }
-
-    public synchronized void speakText(final String text,
-                                       final boolean busyAction,
-                                       final String utteranceID){
-        if(busyAction == FLUSH_IF_BUSY || !mT2S.isSpeaking()) {
-            HashMap<String, String> params = new HashMap<String, String>();
-            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceID);
-
-            if(utteranceID.equals(ID_KNOCK_DETECTOR_RESUME)) {
-                mNumActivePrompts++;
-                Log.d("TextToSpeechService", "Num Active Prompts: " + mNumActivePrompts);
-            }
-
-            mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, params);
-        }
-    }
-
 
 }
