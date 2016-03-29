@@ -30,6 +30,7 @@ import org.w3c.dom.Document;
 
 import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
@@ -274,7 +275,7 @@ public class MainActivity extends NFCAbstractReadActivity {
         final String message = "The product is " + productName + ", the price is " + priceString +
                 ", the quantity is " + quantityString + ".";
 
-        mKnockDetector.registerStrings(null, message, calorieString);
+        mKnockDetector.registerStrings(null, message, nutritionString);
         mKnockDetector.resume();
 
         final String prompt = ". Knock once to stop speech, twice to repeat general product info, " +
@@ -286,9 +287,9 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void sayNutritionInfo() {
         mKnockDetector.pause();
 
-        final String message = "The nutritional info is " + calorieString;
+        final String message = "The nutritional info is " + nutritionString;
 
-        mKnockDetector.registerStrings(null, message, calorieString);
+        mKnockDetector.registerStrings(null, message, nutritionString);
         mKnockDetector.resume();
 
         mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
@@ -441,6 +442,13 @@ public class MainActivity extends NFCAbstractReadActivity {
         for(String string: stringParts) {
             returnString += (string + " ");
         }
+
+        //Add period to make T2S pause between key and value
+        String reg_string = "([a-zA-Z]) ([0-9])";
+
+        String replacementString = "$1. $2";
+
+        returnString = returnString.replaceAll(reg_string, replacementString);
 
         return returnString;
     }
