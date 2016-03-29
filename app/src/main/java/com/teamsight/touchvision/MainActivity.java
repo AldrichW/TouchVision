@@ -134,12 +134,6 @@ public class MainActivity extends NFCAbstractReadActivity {
                         @Override
                         public void onDone(String utteranceId) {
                             Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
-
-                            if (utteranceId.equals(TextToSpeechService.ID_KNOCK_DETECTOR_RESUME)) {
-                                if(mT2Service.isLastDone()){
-                                    mKnockDetector.resume();
-                                }
-                            }
                         }
 
                         @Override
@@ -160,26 +154,21 @@ public class MainActivity extends NFCAbstractReadActivity {
             @Override
             protected void knockDetected(int knockCount) {
                 switch (knockCount){
-                    case 0:
-                        Log.d("knockDetected", "0 knocks");
-                        mT2Service.speakText("Zero knocks detected.", TextToSpeechService.DROP_IF_BUSY);
-                        break;
                     case 1:
                         Log.d("knockDetected", "1 knocks");
-                        mT2Service.speakText(mOutputOneKnock, TextToSpeechService.DROP_IF_BUSY);
+                        mT2Service.interruptSpeech();
                         break;
                     case 2:
                         Log.d("knockDetected", "2 knocks");
-                        mT2Service.speakText(mOutputTwoKnock, TextToSpeechService.DROP_IF_BUSY);
+                        mT2Service.speakText(mOutputTwoKnock, TextToSpeechService.FLUSH_IF_BUSY);
                         break;
                     case 3:
                         Log.d("knockDetected", "3 knocks");
-                        mT2Service.speakText(mOutputThreeKnock, TextToSpeechService.DROP_IF_BUSY);
+                        mT2Service.speakText(mOutputThreeKnock, TextToSpeechService.FLUSH_IF_BUSY);
                         break;
                     default:
                         break;
                 }
-                mKnockDetector.pause();
             }
         };
 
@@ -257,6 +246,10 @@ public class MainActivity extends NFCAbstractReadActivity {
         final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
 
         productIDView.setText(tagMessage);
+
+        mKnockDetector.pause();
+        mT2Service.interruptSpeech();
+
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
@@ -275,22 +268,28 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     protected void sayProductInfo() {
         mKnockDetector.pause();
-        mKnockDetector.registerStrings(priceString, quantityString, calorieString);
 
-        final String message = "The product is " + productName + ". The price is " + priceString +
-                ". Knock once for the price, twice for the quantity, and three times for the calories.";
-        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY,
-                                      TextToSpeechService.ID_KNOCK_DETECTOR_RESUME);
+        final String message = "The product is " + productName + ", the price is " + priceString +
+                ", the quantity is " + quantityString + ".";
+
+        mKnockDetector.registerStrings(null, message, calorieString);
+        mKnockDetector.resume();
+
+        final String prompt = ". Knock once to stop speech, twice to repeat general product info, " +
+                "and three times for nutritional information.";
+        mT2Service.speakText(message + prompt, TextToSpeechService.FLUSH_IF_BUSY);
     }
 
 
     protected void sayNutritionInfo() {
         mKnockDetector.pause();
-        mKnockDetector.registerStrings(calorieString, null, null);
 
-        final String message = "Knock once for calorie info.";
-        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY,
-                                      TextToSpeechService.ID_KNOCK_DETECTOR_RESUME);
+        final String message = "The nutritional info is " + calorieString;
+
+        mKnockDetector.registerStrings(null, message, calorieString);
+        mKnockDetector.resume();
+
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
     }
 
 
@@ -311,6 +310,10 @@ public class MainActivity extends NFCAbstractReadActivity {
                 @Override
                 public void run() {
                     textView.setText(productName);
+
+                    mKnockDetector.registerStrings(null, productName, null);
+                    mKnockDetector.resume();
+
                     mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
 
                     mIntentService.setData(null);
@@ -399,8 +402,12 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
 
+        final String message = "The stop is " + stopTitle;
+        mKnockDetector.registerStrings(null, message, null);
+        mKnockDetector.resume();
+
         Log.d("parseTtcData", stopTitle);
-        mT2Service.speakText("The stop is " + stopTitle, TextToSpeechService.FLUSH_IF_BUSY);
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
 
         NodeList directionList = predsElement.getElementsByTagName("direction");
 

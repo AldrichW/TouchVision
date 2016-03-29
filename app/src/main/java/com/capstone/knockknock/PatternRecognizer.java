@@ -66,8 +66,6 @@ public class PatternRecognizer {
         Log.d("PatternRecognizer", "turnOn");
         detectedKnockCount = 0;
         state = EventGenState_t.Wait;
-        beep();
-        startTimer(initialWindow_ms);
     }
 
     public void knockEvent() {
@@ -76,6 +74,7 @@ public class PatternRecognizer {
         switch(state){
             case Wait:
                 detectedKnockCount++;
+                p.knockDetected(detectedKnockCount);
                 startTimer(minWaitTime_ms);
                 beep();
                 state =  EventGenState_t.S1;
@@ -109,11 +108,6 @@ public class PatternRecognizer {
     public void timeOutEvent() {
         Log.d("PatternRecognizer","timeOutEvent");
         switch(state){
-            case Wait:
-                Log.d("PatternRecognizer","Time out in Wait state");
-                beep();
-                p.knockDetected(detectedKnockCount);
-                break;
             case S1:
                 startTimer(waitWindow_ms);
                 state = EventGenState_t.S2;
@@ -132,6 +126,7 @@ public class PatternRecognizer {
                 detectedKnockCount = 0;
                 state = EventGenState_t.Wait;
                 break;
+            case Wait:
             default:
                 Log.d("PatternRecognizer", "timeOutEvent: Invalid state");
                 break;
