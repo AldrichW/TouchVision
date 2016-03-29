@@ -295,7 +295,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
                             //Using the T2Service, output product name, product name, and quantity
                             sayProductInfo();
-                            sayNutritionInfo();
 
                             mIntentService.setData(null);
                             MainActivity.this.startService(mIntentService);
