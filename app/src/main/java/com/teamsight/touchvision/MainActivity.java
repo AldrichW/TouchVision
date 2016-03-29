@@ -176,7 +176,10 @@ public class MainActivity extends NFCAbstractReadActivity {
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
-                    onTtcTagRead(tagMessage.substring(4));
+                    onTtcTagRead(tagMessage.substring(4), textView);
+                }
+                else if(tagMessage.substring(0, 7).equals("poster_")) {
+                    onPosterRead(tagMessage, textView);
                 }
                 else {
                     onProductTagRead(tagMessage, textView);
@@ -200,6 +203,33 @@ public class MainActivity extends NFCAbstractReadActivity {
         mKnockDetector.registerStrings(calorieString, null, null);
 
         mT2Service.speakText("Knock once for calorie info.", false, ID_KNOCK_DETECTOR_RESUME);
+    }
+
+
+    protected void onPosterRead(final String message, final TextView textView) {
+        HTTPBackendService bs = new HTTPBackendService();
+        String postData = bs.createPOSTDataWithProductIdentifier(message);
+        Log.d(LOG_TAG, postData);
+        final String postOutput = bs.sendPOSTRequest(null, postData);
+        try{
+            JSONObject jsonOut = new JSONObject(postOutput);
+            Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
+            Log.d(LOG_TAG, jsonOut.toString());
+
+            JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
+            productName = productOut.getString(PRODUCT_NAME_KEY);
+
+            textView.post(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText(productName);
+                    mT2Service.speakText(productName, true);
+                }
+            });
+        }
+        catch(Exception e) {
+            Log.d("ERROR", e.getMessage());
+        }
     }
 
 
@@ -236,7 +266,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             });
         }
         catch(Exception e) {
-
+            Log.d("ERROR", e.getMessage());
         }
     }
 
@@ -253,7 +283,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     //    is parsed in onTagRead and passed in here as stopId_routeTag.
     //    Example: onTagRead("ttc_3081_301")
 
-    protected void onTtcTagRead(final String tagData) {
+    protected void onTtcTagRead(final String tagData,final TextView textView) {
         final int underscoreIndex = tagData.indexOf("_");
 
         final String stopId   = tagData.substring(0, underscoreIndex);
@@ -265,6 +295,14 @@ public class MainActivity extends NFCAbstractReadActivity {
         Element predsElement = (Element) document.getElementsByTagName("predictions").item(0);
 
         final String stopTitle = predsElement.getAttribute("stopTitle");
+
+        textView.post(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(stopTitle);
+            }
+        });
+
         Log.d("parseTtcData", stopTitle);
         mT2Service.speakText("The stop is " + stopTitle, true);
 
