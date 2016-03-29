@@ -192,9 +192,10 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     protected void sayProductInfo() {
         mKnockDetector.pause();
-        mKnockDetector.registerStrings(productName, priceString, quantityString);
+        mKnockDetector.registerStrings(priceString, quantityString, calorieString);
 
-        final String message = "Knock once for product name, twice for price and three times for quantity.";
+        final String message = "The product is " + productName +
+                ". Knock once for the price, twice for the quantity, and three times for the calories.";
         mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY,
                                       TextToSpeechService.ID_KNOCK_DETECTOR_RESUME);
     }
@@ -257,7 +258,9 @@ public class MainActivity extends NFCAbstractReadActivity {
             quantityString = String.valueOf(quantity) + " " + quantityUnit;
 
             JSONObject nutritionOut = jsonOut.getJSONObject(NUTRITION_KEY);
-
+            calorieString = nutritionOut.getString(NUTRITION_KEY);
+            calorieString = calorieString.substring(13, calorieString.length() - 1);
+            calorieString += " calories";
 
             textView.post(new Runnable() {
                 @Override
