@@ -20,6 +20,14 @@ public class TextToSpeechService {
             mT2S = new TextToSpeech(mContext, initListener);
         }
     }
+    
+    public Boolean stopService() {
+        if(mT2S != null){
+            mT2S.shutdown();
+            return true;
+        }
+        return false;
+    }
 
     public void setProgressListener(UtteranceProgressListener progressListener){
         mT2S.setOnUtteranceProgressListener(progressListener);
