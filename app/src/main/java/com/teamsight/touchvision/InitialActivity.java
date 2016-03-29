@@ -51,7 +51,7 @@ public class InitialActivity extends Activity {
 
         assert(vWand != null);
 
-        if(!vWand.isConnected()){
+        if(!vWand.isConnected()) {
             //vWand is not connected yet, go to connection flow
             startVWandConnectActivity();
         }
