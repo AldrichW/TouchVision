@@ -61,6 +61,9 @@ public class TextToSpeechService {
         if(busyAction == FLUSH_IF_BUSY || !mT2S.isSpeaking()) {
             mT2S.speak(text, TextToSpeech.QUEUE_FLUSH, null);
         }
+        else{   //add to the Text to Speech queue
+            mT2S.speak(text, TextToSpeech.QUEUE_ADD, null);
+        }
     }
 
     public synchronized void speakText(final String text,

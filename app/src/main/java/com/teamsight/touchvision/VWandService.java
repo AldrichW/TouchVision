@@ -41,7 +41,7 @@ public class VWandService {
         if(vWand.isConnected()){
             //vWand instance is already connected
             MainActivity.vibe.vibrate(750);
-            MainActivity.mT2Service.speakText("V-Wand is Connected", true);
+            MainActivity.mT2Service.speakText("V-Wand is Connected", TextToSpeechService.FLUSH_IF_BUSY);
             return true;
         }
 
@@ -53,17 +53,17 @@ public class VWandService {
         }
 
         for (final Integer pos : vWandDevices) {
-            MainActivity.mT2Service.speakText("Connecting to: V-Wand" + BluetoothService.devices.getDevice(pos).getName().substring(5), true);
+            MainActivity.mT2Service.speakText("Connecting to: V-Wand" + BluetoothService.devices.getDevice(pos).getName().substring(5), TextToSpeechService.FLUSH_IF_BUSY);
 
             if(attemptConnection(pos)){
                 //This means attemptConnection returned true, so the connection was successful, notify user via haptic feedback and TTS
                 MainActivity.vibe.vibrate(750);
-                MainActivity.mT2Service.speakText("V-Wand is Connected", true);
+                MainActivity.mT2Service.speakText("V-Wand is Connected", TextToSpeechService.FLUSH_IF_BUSY);
                 return true;
             }
         }
 
-        MainActivity.mT2Service.speakText("V-Wand Failed to connect", true);
+        MainActivity.mT2Service.speakText("V-Wand Failed to connect", TextToSpeechService.FLUSH_IF_BUSY);
         return false;
 
     }

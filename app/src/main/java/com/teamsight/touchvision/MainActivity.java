@@ -558,8 +558,8 @@ public class MainActivity extends NFCAbstractReadActivity {
                     assert(vibe != null);
 
                     //Sets vibration pattern for a successful read; vibrate for 300ms, stop for 150, then repeat
-                    long[] vibePattern = {0, 300, 150, 300, 150};
-                    vibe.vibrate(vibePattern, 2);
+                    long[] vibePattern = {0, 300, 15, 300};
+                    vibe.vibrate(vibePattern, -1);
 
                     //Plays a beep sound to notify user of successful read.
                     tg.startTone(ToneGenerator.TONE_PROP_BEEP);

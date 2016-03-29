@@ -83,6 +83,7 @@ public class VWandReadIntentService extends IntentService {
         {
             e.printStackTrace();
             Log.e(LOG_TAG, "Failed to read tag");
+            onHandleIntent(workIntent);
         }
         }
 }
