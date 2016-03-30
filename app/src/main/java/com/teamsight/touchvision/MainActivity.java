@@ -10,33 +10,25 @@ import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.Vibrator;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.capstone.knockknock.KnockDetector;
+import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
+import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Document;
 
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-
-import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
-import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -58,12 +50,10 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
 
-    // Intent request codes
-    private static final int REQUEST_ENABLE_BT = 1;
-    private static final int REQUEST_CONNECT = 2;
-    private static final int REQUEST_READ = 4;
 
     private Button productButton;
+    private Button priceButton;
+    private Button quantityButton;
     private Button nutritionButton;
 
     // Default values so we can test without a tag read
@@ -100,14 +90,14 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "No Sleep");
-        wakeLock.acquire();
         cacheTable = new Hashtable<String, JSONObject>();
+        mT2Service = InitialActivity.mT2Service;
+        mVWandService = vWandConnectActivity.mVWandService;
 
         setContentView(R.layout.activity_main);
         productButton = (Button) this.findViewById(R.id.product_button);
+        priceButton = (Button)this.findViewById(R.id.price_button);
+        quantityButton = (Button)this.findViewById(R.id.quantity_button);
         nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
 
         productButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -119,6 +109,27 @@ public class MainActivity extends NFCAbstractReadActivity {
                 return true;
             }
         });
+
+        priceButton.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean onLongClick(View v) {
+                //If there is nutritional info queued from a previous tag read
+                //Voice out the nutritional info.
+                sayPriceInfo();
+                return true;
+            }
+        });
+
+        quantityButton.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean onLongClick(View v) {
+                //If there is nutritional info queued from a previous tag read
+                //Voice out the nutritional info.
+                sayQuantityInfo();
+                return true;
+            }
+        });
+
         nutritionButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -128,42 +139,6 @@ public class MainActivity extends NFCAbstractReadActivity {
                 return true;
             }
         });
-
-        mT2Service = new TextToSpeechService(getApplicationContext(),
-                new TextToSpeech.OnInitListener() {
-                    @Override
-                    public void onInit(int status) {
-                        Log.d(LOG_TAG, "Text To Speech Service started!");
-                        if (TextToSpeech.SUCCESS == status) {
-                            if (mT2Service.setVoice(Locale.US)) {
-                                Log.d(LOG_TAG, "Voice set successfully!");
-                                Log.d(LOG_TAG, "Text To Speech service ready to take requests");
-                            }
-
-                            mT2Service.setProgressListener(new UtteranceProgressListener() {
-
-                                @Override
-                                public void onStart(String utteranceId) {
-                                    Log.d("ProgressListener", "Speech Utterance Progress Started");
-                                }
-
-                                @Override
-                                public void onDone(String utteranceId) {
-                                    Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
-                                }
-
-                                @Override
-                                public void onError(String utteranceId) {
-                                    Log.d("ProgressListener", "Speech Utterance Error");
-                                }
-                            });
-                        }
-
-                        else{
-                            mT2Service.startService();
-                        }
-                    }
-                });
 
         //Create our knock detector instance
         mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
@@ -190,8 +165,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
         mKnockDetector.init();
 
-        mVWandService = new VWandService(); //Create instance of VWand
-
         vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
 
         // The filter's action is BROADCAST_ACTION
@@ -214,14 +187,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onStart() {
         super.onStart();
 
-        if(!BluetoothService.isBluetoothEnabled()){
-            Intent enableBtIntent = BluetoothService.activateBluetoothAdapter();
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-        while(!mVWandService.isVWandConnected()){
-            mVWandService.connectToVWand();
-        }
-
         mIntentService = new Intent(MainActivity.this, VWandReadIntentService.class);
         mIntentService.setData(null);
         this.startService(mIntentService);
@@ -231,8 +196,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     @Override
     protected void onDestroy(){
         super.onDestroy();
-        mVWandService.disconnectVWand();    //Kill off the VWand when the app is about to be destroyed.
-        wakeLock.release();
     }
 
     @Override
@@ -259,11 +222,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     @Override
     protected void onTagRead(final String tagMessage){
-        final TextView textView      = (TextView) this.findViewById(R.id.tag_message_text);
-        final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
-
-        productIDView.setText(tagMessage);
-
         mKnockDetector.pause();
         mT2Service.interruptSpeech();
 
@@ -277,13 +235,13 @@ public class MainActivity extends NFCAbstractReadActivity {
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
-                    onTtcTagRead(tagMessage.substring(4), textView);
+                    onTtcTagRead(tagMessage.substring(4));
                 }
                 else if(tagMessage.substring(0, 7).equals("poster_")) {
-                    onPosterRead(tagMessage, textView);
+                    onPosterRead(tagMessage);
                 }
                 else {
-                    onProductTagRead(tagMessage, textView);
+                    onProductTagRead(tagMessage);
                 }
             }
         }).start();
@@ -308,6 +266,28 @@ public class MainActivity extends NFCAbstractReadActivity {
         mT2Service.speakText(message + prompt, TextToSpeechService.FLUSH_IF_BUSY);
     }
 
+    protected void sayPriceInfo(){
+        mKnockDetector.pause();
+
+        final String message = "The price is " + priceString + ".";
+
+        mKnockDetector.registerStrings(null, message, nutritionString);
+        mKnockDetector.resume();
+
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
+    }
+
+    protected void sayQuantityInfo(){
+        mKnockDetector.pause();
+
+        final String message = "The quantity is " + quantityString + ".";;
+
+        mKnockDetector.registerStrings(null, message, nutritionString);
+        mKnockDetector.resume();
+
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
+    }
+
 
     protected void sayNutritionInfo() {
         mKnockDetector.pause();
@@ -321,7 +301,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
 
-    protected void onPosterRead(final String message, final TextView textView) {
+    protected void onPosterRead(final String message) {
         HTTPBackendService bs = new HTTPBackendService();
         String postData = bs.createPOSTDataWithProductIdentifier(message);
         Log.d(LOG_TAG, postData);
@@ -334,18 +314,10 @@ public class MainActivity extends NFCAbstractReadActivity {
             JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
             productName = productOut.getString(PRODUCT_NAME_KEY);
 
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(productName);
+            mKnockDetector.registerStrings(null, productName, null);
+            mKnockDetector.resume();
 
-                    mKnockDetector.registerStrings(null, productName, null);
-                    mKnockDetector.resume();
-
-                    mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
-
-                }
-            });
+            mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
         }
         catch(Exception e) {
             Log.d("ERROR", e.getMessage());
@@ -353,7 +325,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
 
-    protected void onProductTagRead(final String message, final TextView textView) {
+    protected void onProductTagRead(final String message) {
         HTTPBackendService bs = new HTTPBackendService();
         JSONObject jsonOut = null;
         System.out.println("Message is: " + message);
@@ -394,15 +366,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             nutritionString = nutritionOut.getString(NUTRITION_KEY);
             nutritionString = parseNutrition(nutritionString);
 
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(productName);
-                    textView.setText(nutritionString);
-
-                    sayProductInfo();
-                }
-            });
+            sayProductInfo();
         }
         catch(Exception e) {
             Log.d("ERROR", e.getMessage());
@@ -422,7 +386,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     //    is parsed in onTagRead and passed in here as stopId_routeTag.
     //    Example: onTagRead("ttc_3081_301")
 
-    protected void onTtcTagRead(final String tagData,final TextView textView) {
+    protected void onTtcTagRead(final String tagData) {
         final int underscoreIndex = tagData.indexOf("_");
 
         final String stopId   = tagData.substring(0, underscoreIndex);
@@ -434,13 +398,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         Element predsElement = (Element) document.getElementsByTagName("predictions").item(0);
 
         final String stopTitle = predsElement.getAttribute("stopTitle");
-
-        textView.post(new Runnable() {
-            @Override
-            public void run() {
-                textView.setText(stopTitle);
-            }
-        });
 
         final String message = "The stop is " + stopTitle;
         mKnockDetector.registerStrings(null, message, null);
@@ -488,47 +445,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         returnString = returnString.replaceAll(reg_string, replacementString);
 
         return returnString;
-    }
-
-    /**
-     * This function starts Read Activity.
-     */
-    public void startReadActivity() {
-        Intent i = new Intent(this, ReadActivity.class);
-        startActivityForResult(i, REQUEST_READ);
-    }
-
-    //This is a callback for the result of the activities that are called from here.
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == REQUEST_ENABLE_BT & resultCode == RESULT_OK) {
-            assert(mVWandService != null);
-            mVWandService.connectToVWand();
-
-        } else if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
-
-
-            try
-            {
-                Toast.makeText(getApplicationContext(), "Successfully Connected to the vWand.", Toast.LENGTH_LONG).show(); //Sets View Layout properties
-                startReadActivity();
-            }catch(Exception e)
-            {
-
-            }
-
-        } else if (requestCode == REQUEST_READ) {
-
-            //Sets vibration pattern for a successful read; vibrate for 300ms, stop for 150, then repeat
-            long[] vibePattern = {0, 300, 150, 300, 150};
-            vibe.vibrate(vibePattern, 2);
-
-            //Plays a beep sound to notify user of successful read.
-            tg.startTone(ToneGenerator.TONE_PROP_BEEP);
-            onTagRead(tagContent);
-        }
     }
 
     private class VWandStateReceiver extends BroadcastReceiver {
