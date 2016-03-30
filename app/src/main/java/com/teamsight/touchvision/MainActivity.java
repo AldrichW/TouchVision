@@ -10,18 +10,14 @@ import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.Vibrator;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.capstone.knockknock.KnockDetector;
-import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
 
@@ -29,8 +25,6 @@ import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import java.util.Locale;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -51,10 +45,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String TYPE_KEY = "type";
     private static final String NUTRITION_KEY = "nutrition";
 
-    // Intent request codes
-    private static final int REQUEST_ENABLE_BT = 1;
-    private static final int REQUEST_CONNECT = 2;
-    private static final int REQUEST_READ = 4;
 
     private Button productButton;
     private Button priceButton;
@@ -95,10 +85,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "No Sleep");
-        wakeLock.acquire();
+        mT2Service = InitialActivity.mT2Service;
+        mVWandService = vWandConnectActivity.mVWandService;
 
         setContentView(R.layout.activity_main);
         productButton = (Button) this.findViewById(R.id.product_button);
@@ -146,42 +134,6 @@ public class MainActivity extends NFCAbstractReadActivity {
             }
         });
 
-        mT2Service = new TextToSpeechService(getApplicationContext(),
-            new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                Log.d(LOG_TAG, "Text To Speech Service started!");
-                if (TextToSpeech.SUCCESS == status) {
-                    if (mT2Service.setVoice(Locale.US)) {
-                        Log.d(LOG_TAG, "Voice set successfully!");
-                        Log.d(LOG_TAG, "Text To Speech service ready to take requests");
-                    }
-
-                    mT2Service.setProgressListener(new UtteranceProgressListener() {
-
-                        @Override
-                        public void onStart(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Progress Started");
-                        }
-
-                        @Override
-                        public void onDone(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
-                        }
-
-                        @Override
-                        public void onError(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Error");
-                        }
-                    });
-                }
-
-                else{
-                    mT2Service.startService();
-                }
-            }
-        });
-
         //Create our knock detector instance
         mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
             @Override
@@ -207,8 +159,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
         mKnockDetector.init();
 
-        mVWandService = new VWandService(); //Create instance of VWand
-
         vibe = (Vibrator) getSystemService( VIBRATOR_SERVICE );
 
         // The filter's action is BROADCAST_ACTION
@@ -231,14 +181,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onStart() {
         super.onStart();
 
-        if(!BluetoothService.isBluetoothEnabled()){
-            Intent enableBtIntent = BluetoothService.activateBluetoothAdapter();
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-        while(!mVWandService.isVWandConnected()){
-            mVWandService.connectToVWand();
-        }
-
         mIntentService = new Intent(MainActivity.this, VWandReadIntentService.class);
         mIntentService.setData(null);
         this.startService(mIntentService);
@@ -248,8 +190,6 @@ public class MainActivity extends NFCAbstractReadActivity {
     @Override
     protected void onDestroy(){
         super.onDestroy();
-        mVWandService.disconnectVWand();    //Kill off the VWand when the app is about to be destroyed.
-        wakeLock.release();
     }
 
     @Override
@@ -482,47 +422,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         returnString = returnString.replaceAll(reg_string, replacementString);
 
         return returnString;
-    }
-
-    /**
-     * This function starts Read Activity.
-     */
-    public void startReadActivity() {
-        Intent i = new Intent(this, ReadActivity.class);
-        startActivityForResult(i, REQUEST_READ);
-    }
-
-    //This is a callback for the result of the activities that are called from here.
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == REQUEST_ENABLE_BT & resultCode == RESULT_OK) {
-            assert(mVWandService != null);
-            mVWandService.connectToVWand();
-
-        } else if (requestCode == REQUEST_CONNECT & resultCode == RESULT_OK) {
-
-
-            try
-            {
-                Toast.makeText(getApplicationContext(), "Successfully Connected to the vWand.", Toast.LENGTH_LONG).show(); //Sets View Layout properties
-                startReadActivity();
-            }catch(Exception e)
-            {
-
-            }
-
-        } else if (requestCode == REQUEST_READ) {
-
-            //Sets vibration pattern for a successful read; vibrate for 300ms, stop for 150, then repeat
-            long[] vibePattern = {0, 300, 150, 300, 150};
-            vibe.vibrate(vibePattern, 2);
-
-            //Plays a beep sound to notify user of successful read.
-            tg.startTone(ToneGenerator.TONE_PROP_BEEP);
-            onTagRead(tagContent);
-        }
     }
 
     private class VWandStateReceiver extends BroadcastReceiver {
