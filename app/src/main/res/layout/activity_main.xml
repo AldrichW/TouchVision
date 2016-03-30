@@ -4,71 +4,47 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
-    android:background="@android:color/holo_blue_light">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/nfc_tag"
-        android:id="@+id/nfc_tag_text"
-        android:textSize="18sp"
-        android:fontFamily="helvetica"
-        android:textColor="@android:color/white"
-        android:layout_alignParentTop="true"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/product_id_text"
-        android:layout_centerVertical="true"
-        android:textSize="24sp"
-        android:fontFamily="helvetica"
-        android:textColor="@android:color/white"
-        android:layout_below="@id/nfc_tag_text"
-        />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/product_info"
-        android:id="@+id/product_info_text"
-        android:layout_centerVertical="true"
-        android:textSize="18sp"
-        android:fontFamily="helvetica"
-        android:textColor="@android:color/white"
-        android:layout_below="@id/product_id_text"
-        />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/tag_message_text"
-        android:layout_centerVertical="true"
-        android:textSize="24sp"
-        android:fontFamily="helvetica"
-        android:textColor="@android:color/white"
-        android:layout_below="@id/product_info_text"
-       />
+    android:background="@android:color/black">
 
     <Button
-        android:layout_width="300dp"
+        android:layout_width="fill_parent"
         android:layout_height="100dp"
-        android:text="@string/product_info"
+        android:text="product info"
         android:id="@+id/product_button"
-        android:layout_above="@+id/nutrition_button"
-        android:textSize="36sp"/>
+        android:textSize="40dp"
+        android:background="@android:color/holo_green_light"
+        android:layout_alignParentEnd="true" />
 
     <Button
-        android:layout_width="300dp"
+        android:layout_width="fill_parent"
         android:layout_height="100dp"
-        android:text="@string/nutrition_info"
+        android:text="price info"
+        android:id="@+id/price_button"
+        android:textSize="40dp"
+        android:background="@android:color/holo_green_light"
+        android:layout_alignBaseline="@+id/nutrition_button"
+        android:layout_alignBottom="@+id/nutrition_button"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:text="quantity info"
+        android:id="@+id/quantity_button"
+        android:textSize="40dp"
+        android:background="@android:color/holo_green_light"
+        android:layout_above="@+id/nutrition_button"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:text="Nutrition Info"
         android:id="@+id/nutrition_button"
-        android:layout_marginBottom="45dp"
+        android:background="@android:color/holo_green_light"
+        android:textSize="40dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:textSize="36sp"/>
+        android:layout_alignParentStart="true" />
 
 
 </RelativeLayout>

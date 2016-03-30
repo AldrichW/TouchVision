@@ -18,23 +18,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.capstone.knockknock.KnockDetector;
-
-import org.json.JSONObject;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Document;
-
-import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-
+import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.teamsight.touchvision.sistelnetworks.vwand.BDevicesArray;
 import com.teamsight.touchvision.sistelnetworks.vwand.VWand;
+
+import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import java.util.Locale;
 
 
 public class MainActivity extends NFCAbstractReadActivity {
@@ -61,6 +57,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final int REQUEST_READ = 4;
 
     private Button productButton;
+    private Button priceButton;
+    private Button quantityButton;
     private Button nutritionButton;
 
     // Default values so we can test without a tag read
@@ -104,6 +102,8 @@ public class MainActivity extends NFCAbstractReadActivity {
 
         setContentView(R.layout.activity_main);
         productButton = (Button) this.findViewById(R.id.product_button);
+        priceButton = (Button)this.findViewById(R.id.price_button);
+        quantityButton = (Button)this.findViewById(R.id.quantity_button);
         nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
 
         productButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -115,6 +115,27 @@ public class MainActivity extends NFCAbstractReadActivity {
                 return true;
             }
         });
+
+        priceButton.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean onLongClick(View v) {
+                //If there is nutritional info queued from a previous tag read
+                //Voice out the nutritional info.
+                sayPriceInfo();
+                return true;
+            }
+        });
+
+        quantityButton.setOnLongClickListener(new View.OnLongClickListener(){
+            @Override
+            public boolean onLongClick(View v) {
+                //If there is nutritional info queued from a previous tag read
+                //Voice out the nutritional info.
+                sayQuantityInfo();
+                return true;
+            }
+        });
+
         nutritionButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -255,11 +276,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     @Override
     protected void onTagRead(final String tagMessage){
-        final TextView textView      = (TextView) this.findViewById(R.id.tag_message_text);
-        final TextView productIDView = (TextView) this.findViewById(R.id.product_id_text);
-
-        productIDView.setText(tagMessage);
-
         mKnockDetector.pause();
         mT2Service.interruptSpeech();
 
@@ -273,13 +289,13 @@ public class MainActivity extends NFCAbstractReadActivity {
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
-                    onTtcTagRead(tagMessage.substring(4), textView);
+                    onTtcTagRead(tagMessage.substring(4));
                 }
                 else if(tagMessage.substring(0, 7).equals("poster_")) {
-                    onPosterRead(tagMessage, textView);
+                    onPosterRead(tagMessage);
                 }
                 else {
-                    onProductTagRead(tagMessage, textView);
+                    onProductTagRead(tagMessage);
                 }
             }
         }).start();
@@ -304,6 +320,28 @@ public class MainActivity extends NFCAbstractReadActivity {
         mT2Service.speakText(message + prompt, TextToSpeechService.FLUSH_IF_BUSY);
     }
 
+    protected void sayPriceInfo(){
+        mKnockDetector.pause();
+
+        final String message = "The price is " + priceString + ".";
+
+        mKnockDetector.registerStrings(null, message, nutritionString);
+        mKnockDetector.resume();
+
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
+    }
+
+    protected void sayQuantityInfo(){
+        mKnockDetector.pause();
+
+        final String message = "The quantity is " + quantityString + ".";;
+
+        mKnockDetector.registerStrings(null, message, nutritionString);
+        mKnockDetector.resume();
+
+        mT2Service.speakText(message, TextToSpeechService.FLUSH_IF_BUSY);
+    }
+
 
     protected void sayNutritionInfo() {
         mKnockDetector.pause();
@@ -317,7 +355,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
 
-    protected void onPosterRead(final String message, final TextView textView) {
+    protected void onPosterRead(final String message) {
         HTTPBackendService bs = new HTTPBackendService();
         String postData = bs.createPOSTDataWithProductIdentifier(message);
         Log.d(LOG_TAG, postData);
@@ -330,18 +368,10 @@ public class MainActivity extends NFCAbstractReadActivity {
             JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
             productName = productOut.getString(PRODUCT_NAME_KEY);
 
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(productName);
+            mKnockDetector.registerStrings(null, productName, null);
+            mKnockDetector.resume();
 
-                    mKnockDetector.registerStrings(null, productName, null);
-                    mKnockDetector.resume();
-
-                    mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
-
-                }
-            });
+            mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
         }
         catch(Exception e) {
             Log.d("ERROR", e.getMessage());
@@ -349,7 +379,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
 
-    protected void onProductTagRead(final String message, final TextView textView) {
+    protected void onProductTagRead(final String message) {
         HTTPBackendService bs = new HTTPBackendService();
         String postData = bs.createPOSTDataWithProductIdentifier(message);
         Log.d(LOG_TAG, postData);
@@ -373,15 +403,7 @@ public class MainActivity extends NFCAbstractReadActivity {
             nutritionString = nutritionOut.getString(NUTRITION_KEY);
             nutritionString = parseNutrition(nutritionString);
 
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(productName);
-                    textView.setText(nutritionString);
-
-                    sayProductInfo();
-                }
-            });
+            sayProductInfo();
         }
         catch(Exception e) {
             Log.d("ERROR", e.getMessage());
@@ -401,7 +423,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     //    is parsed in onTagRead and passed in here as stopId_routeTag.
     //    Example: onTagRead("ttc_3081_301")
 
-    protected void onTtcTagRead(final String tagData,final TextView textView) {
+    protected void onTtcTagRead(final String tagData) {
         final int underscoreIndex = tagData.indexOf("_");
 
         final String stopId   = tagData.substring(0, underscoreIndex);
@@ -413,13 +435,6 @@ public class MainActivity extends NFCAbstractReadActivity {
         Element predsElement = (Element) document.getElementsByTagName("predictions").item(0);
 
         final String stopTitle = predsElement.getAttribute("stopTitle");
-
-        textView.post(new Runnable() {
-            @Override
-            public void run() {
-                textView.setText(stopTitle);
-            }
-        });
 
         final String message = "The stop is " + stopTitle;
         mKnockDetector.registerStrings(null, message, null);
