@@ -10,8 +10,7 @@
         android:layout_height="450dp"
         android:src="@mipmap/insight_logo"
         android:id="@+id/main_logo_image"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentTop="true" />
 
 
     <TextView

@@ -1,50 +1,46 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@android:color/black">
 
     <Button
         android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:text="product info"
+        android:layout_height="110dp"
+        android:text="Product Info"
         android:id="@+id/product_button"
-        android:textSize="40dp"
-        android:background="@android:color/holo_green_light"
-        android:layout_alignParentEnd="true" />
+        android:textSize="45dp"
+        android:background="@android:color/holo_green_light" />
 
     <Button
         android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:text="price info"
+        android:layout_height="110dp"
+        android:text="Price Info"
         android:id="@+id/price_button"
-        android:textSize="40dp"
+        android:textSize="45dp"
         android:background="@android:color/holo_green_light"
-        android:layout_alignBaseline="@+id/nutrition_button"
-        android:layout_alignBottom="@+id/nutrition_button"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"/>
 
     <Button
         android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:text="quantity info"
+        android:layout_height="110dp"
+        android:text="Quantity Info"
         android:id="@+id/quantity_button"
-        android:textSize="40dp"
+        android:textSize="45dp"
         android:background="@android:color/holo_green_light"
-        android:layout_above="@+id/nutrition_button"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"/>
 
     <Button
         android:layout_width="fill_parent"
-        android:layout_height="100dp"
+        android:layout_height="110dp"
         android:text="Nutrition Info"
         android:id="@+id/nutrition_button"
         android:background="@android:color/holo_green_light"
-        android:textSize="40dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
+        android:textSize="45dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="20dp"/>
 
-
-</RelativeLayout>
+</LinearLayout>
