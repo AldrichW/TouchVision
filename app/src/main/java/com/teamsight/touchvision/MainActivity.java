@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
@@ -42,6 +43,8 @@ public class MainActivity extends NFCAbstractReadActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private KnockDetector mKnockDetector = null;
     public static Vibrator vibe;
+
+    private static PowerManager.WakeLock wakeLock;
 
 
     //JSON Output key constants
@@ -93,6 +96,12 @@ public class MainActivity extends NFCAbstractReadActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "No Sleep");
+        wakeLock.acquire();
+
         setContentView(R.layout.activity_main);
         productButton = (Button) this.findViewById(R.id.product_button);
         nutritionButton = (Button) this.findViewById(R.id.nutrition_button);
@@ -219,6 +228,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     protected void onDestroy(){
         super.onDestroy();
         mVWandService.disconnectVWand();    //Kill off the VWand when the app is about to be destroyed.
+        wakeLock.release();
     }
 
     @Override
@@ -253,6 +263,13 @@ public class MainActivity extends NFCAbstractReadActivity {
         mKnockDetector.pause();
         mT2Service.interruptSpeech();
 
+        if(tagMessage == null){
+            mIntentService.setData(null);
+            MainActivity.this.startService(mIntentService);
+
+            return;
+        }
+
         new Thread(new Runnable() {
             public void run() {
                 if(tagMessage.substring(0, 4).equals("ttc_")) {
@@ -266,6 +283,10 @@ public class MainActivity extends NFCAbstractReadActivity {
                 }
             }
         }).start();
+
+
+        mIntentService.setData(null);
+        MainActivity.this.startService(mIntentService);
     }
 
 
@@ -319,8 +340,6 @@ public class MainActivity extends NFCAbstractReadActivity {
 
                     mT2Service.speakText(productName, TextToSpeechService.FLUSH_IF_BUSY);
 
-                    mIntentService.setData(null);
-                    MainActivity.this.startService(mIntentService);
                 }
             });
         }
@@ -361,9 +380,6 @@ public class MainActivity extends NFCAbstractReadActivity {
                     textView.setText(nutritionString);
 
                     sayProductInfo();
-
-                    mIntentService.setData(null);
-                    MainActivity.this.startService(mIntentService);
                 }
             });
         }

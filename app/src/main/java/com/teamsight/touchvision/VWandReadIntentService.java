@@ -74,9 +74,10 @@ public class VWandReadIntentService extends IntentService {
                         //This is a shitty h4xx0r way of doing it, need to build a smarter parser here
                         content = content.substring(3);
                         MainActivity.tagContent = content;
-                        mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_COMPLETE);
                     }
                 }
+
+                mBroadcastNotifier.broadcastIntentWithState(Constants.STATE_ACTION_COMPLETE);
             }
 
         }catch(Exception e)
