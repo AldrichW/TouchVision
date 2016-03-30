@@ -24,11 +24,13 @@ import android.widget.Toast;
 import com.teamsight.touchvision.sistelnetworks.activities.ReadActivity;
 import com.capstone.knockknock.KnockDetector;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -45,6 +47,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     public static Vibrator vibe;
 
     private static PowerManager.WakeLock wakeLock;
+    private static Hashtable<String, JSONObject> cacheTable;
 
 
     //JSON Output key constants
@@ -101,6 +104,7 @@ public class MainActivity extends NFCAbstractReadActivity {
 
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "No Sleep");
         wakeLock.acquire();
+        cacheTable = new Hashtable<String, JSONObject>();
 
         setContentView(R.layout.activity_main);
         productButton = (Button) this.findViewById(R.id.product_button);
@@ -126,40 +130,40 @@ public class MainActivity extends NFCAbstractReadActivity {
         });
 
         mT2Service = new TextToSpeechService(getApplicationContext(),
-            new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                Log.d(LOG_TAG, "Text To Speech Service started!");
-                if (TextToSpeech.SUCCESS == status) {
-                    if (mT2Service.setVoice(Locale.US)) {
-                        Log.d(LOG_TAG, "Voice set successfully!");
-                        Log.d(LOG_TAG, "Text To Speech service ready to take requests");
+                new TextToSpeech.OnInitListener() {
+                    @Override
+                    public void onInit(int status) {
+                        Log.d(LOG_TAG, "Text To Speech Service started!");
+                        if (TextToSpeech.SUCCESS == status) {
+                            if (mT2Service.setVoice(Locale.US)) {
+                                Log.d(LOG_TAG, "Voice set successfully!");
+                                Log.d(LOG_TAG, "Text To Speech service ready to take requests");
+                            }
+
+                            mT2Service.setProgressListener(new UtteranceProgressListener() {
+
+                                @Override
+                                public void onStart(String utteranceId) {
+                                    Log.d("ProgressListener", "Speech Utterance Progress Started");
+                                }
+
+                                @Override
+                                public void onDone(String utteranceId) {
+                                    Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
+                                }
+
+                                @Override
+                                public void onError(String utteranceId) {
+                                    Log.d("ProgressListener", "Speech Utterance Error");
+                                }
+                            });
+                        }
+
+                        else{
+                            mT2Service.startService();
+                        }
                     }
-
-                    mT2Service.setProgressListener(new UtteranceProgressListener() {
-
-                        @Override
-                        public void onStart(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Progress Started");
-                        }
-
-                        @Override
-                        public void onDone(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Progress Ended: " + utteranceId);
-                        }
-
-                        @Override
-                        public void onError(String utteranceId) {
-                            Log.d("ProgressListener", "Speech Utterance Error");
-                        }
-                    });
-                }
-
-                else{
-                    mT2Service.startService();
-                }
-            }
-        });
+                });
 
         //Create our knock detector instance
         mKnockDetector = new KnockDetector((SensorManager) this.getSystemService(Context.SENSOR_SERVICE)){
@@ -351,13 +355,30 @@ public class MainActivity extends NFCAbstractReadActivity {
 
     protected void onProductTagRead(final String message, final TextView textView) {
         HTTPBackendService bs = new HTTPBackendService();
-        String postData = bs.createPOSTDataWithProductIdentifier(message);
-        Log.d(LOG_TAG, postData);
-        final String postOutput = bs.sendPOSTRequest(null, postData);
-        try{
-            JSONObject jsonOut= new JSONObject(postOutput);
+        JSONObject jsonOut = null;
+        System.out.println("Message is: " + message);
+        if(!cacheTable.containsKey(message)){
+            String postData = bs.createPOSTDataWithProductIdentifier(message);
+            Log.d(LOG_TAG, postData);
+            final String postOutput = bs.sendPOSTRequest(null, postData);
+            try {
+                jsonOut = new JSONObject(postOutput);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             Log.d(LOG_TAG, "The JSON Object response from the POST Network query.");
-            Log.d(LOG_TAG, jsonOut.toString());
+            if (jsonOut != null) {
+                Log.d(LOG_TAG, jsonOut.toString());
+            }
+
+            //Store this in the cache table, so that we can read it from here instead of
+            cacheTable.put(message, jsonOut);
+        } else {
+            Log.d(LOG_TAG, "The JSONObject associated with the UPC: " + message + " was already in the cacheTable.");
+            jsonOut = cacheTable.get(message);
+        }
+
+        try{
             // Hard coding JSON key names. gross.
             // Going to make a dedicated JSONParserService. Stay tuned
             JSONObject productOut = jsonOut.getJSONObject(PRODUCT_KEY);
@@ -478,7 +499,7 @@ public class MainActivity extends NFCAbstractReadActivity {
     }
 
     //This is a callback for the result of the activities that are called from here.
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
