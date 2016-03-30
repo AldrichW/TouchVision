@@ -59,7 +59,9 @@ public class PatternRecognizer {
         Log.d("PatternRecognizer", "turnOff");
         detectedKnockCount = 0;
         state = EventGenState_t.Wait;
-        timerFuture.cancel(false);
+        if(timerFuture != null){
+            timerFuture.cancel(false);
+        }
     }
 
     public void turnOn() {
